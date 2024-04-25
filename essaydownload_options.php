@@ -36,7 +36,7 @@ if (class_exists('\mod_quiz\local\reports\attempts_report_options')) {
 }
 
 /**
- * Class to store the options for a {@see quiz_archive_report}.
+ * Class to store the options for a {@see quiz_essaydownload_report}.
  *
  * @package   quiz_essaydownload
  * @copyright 2024 Philipp E. Imhof

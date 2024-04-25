@@ -38,7 +38,6 @@ if (class_exists('\mod_quiz\local\reports\attempts_report')) {
 if (class_exists('\mod_quiz\quiz_attempt')) {
     class_alias('\mod_quiz\quiz_attempt', '\quiz_essaydownload_quiz_attempt_alias');
 } else {
-    require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
     require_once($CFG->dirroot . '/mod/quiz/attemptlib.php');
     class_alias('\quiz_attempt', '\quiz_essaydownload_quiz_attempt_alias');
 }

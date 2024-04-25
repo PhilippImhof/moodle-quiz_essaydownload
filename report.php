@@ -31,14 +31,12 @@ defined('MOODLE_INTERNAL') || die();
 // This work-around is required until Moodle 4.2 is the lowest version we support.
 if (class_exists('\mod_quiz\local\reports\attempts_report')) {
     class_alias('\mod_quiz\local\reports\attempts_report', '\quiz_essaydownload_report_parent_alias');
-} else {
-    require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
-    class_alias('\quiz_attempts_report', '\quiz_essaydownload_report_parent_alias');
-}
-if (class_exists('\mod_quiz\quiz_attempt')) {
     class_alias('\mod_quiz\quiz_attempt', '\quiz_essaydownload_quiz_attempt_alias');
 } else {
+    require_once($CFG->dirroot . '/mod/quiz/report/default.php');
+    require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
     require_once($CFG->dirroot . '/mod/quiz/attemptlib.php');
+    class_alias('\quiz_attempts_report', '\quiz_essaydownload_report_parent_alias');
     class_alias('\quiz_attempt', '\quiz_essaydownload_quiz_attempt_alias');
 }
 

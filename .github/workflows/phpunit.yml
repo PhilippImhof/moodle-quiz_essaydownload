@@ -77,4 +77,4 @@ jobs:
       - name: PHPUnit tests
         if: ${{ always() }}
         run: |
-          moodle-plugin-ci phpunit --fail-on-warning --coverage-clover
+          moodle-plugin-ci phpunit --fail-on-warning

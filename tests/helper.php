@@ -95,18 +95,22 @@ class quiz_essaydownload_test_helper {
         $questiongenerator->create_question('shortanswer', null, ['category' => $cat->id]);
         $questiongenerator->create_question('shortanswer', null, ['category' => $cat->id]);
 
-        $quizobj = \quiz_essaydownload_quiz_settings_alias::create($quiz->id);
-        $structure = $quizobj->get_structure();
-        $filtercondition = [
-            'filter' => [
-                'category' => [
-                    'jointype' => \qbank_managecategories\category_condition::JOINTYPE_DEFAULT,
-                    'values' => [$cat->id],
-                    'filteroptions' => ['includesubcategories' => false],
+        if (class_exists('\qbank_managecategories\category_condition')) {
+            $quizobj = \quiz_essaydownload_quiz_settings_alias::create($quiz->id);
+            $structure = $quizobj->get_structure();
+            $filtercondition = [
+                'filter' => [
+                    'category' => [
+                        'jointype' => \qbank_managecategories\category_condition::JOINTYPE_DEFAULT,
+                        'values' => [$cat->id],
+                        'filteroptions' => ['includesubcategories' => false],
+                    ],
                 ],
-            ],
-        ];
-        $structure->add_random_questions($page, 1, $filtercondition);
+            ];
+            $structure->add_random_questions($page, 1, $filtercondition);
+        } else {
+            quiz_add_random_questions($quiz, $page, $cat->id, 1, false);
+        }
     }
 
     /**
@@ -122,18 +126,22 @@ class quiz_essaydownload_test_helper {
         $questiongenerator->create_question('essay', null, ['category' => $cat->id]);
         $questiongenerator->create_question('essay', null, ['category' => $cat->id]);
 
-        $quizobj = \quiz_essaydownload_quiz_settings_alias::create($quiz->id);
-        $structure = $quizobj->get_structure();
-        $filtercondition = [
-            'filter' => [
-                'category' => [
-                    'jointype' => \qbank_managecategories\category_condition::JOINTYPE_DEFAULT,
-                    'values' => [$cat->id],
-                    'filteroptions' => ['includesubcategories' => false],
+        if (class_exists('\qbank_managecategories\category_condition')) {
+            $quizobj = \quiz_essaydownload_quiz_settings_alias::create($quiz->id);
+            $structure = $quizobj->get_structure();
+            $filtercondition = [
+                'filter' => [
+                    'category' => [
+                        'jointype' => \qbank_managecategories\category_condition::JOINTYPE_DEFAULT,
+                        'values' => [$cat->id],
+                        'filteroptions' => ['includesubcategories' => false],
+                    ],
                 ],
-            ],
-        ];
-        $structure->add_random_questions($page, 1, $filtercondition);
+            ];
+            $structure->add_random_questions($page, 1, $filtercondition);
+        } else {
+            quiz_add_random_questions($quiz, $page, $cat->id, 1, false);
+        }
     }
 
     /**

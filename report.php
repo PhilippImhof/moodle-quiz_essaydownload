@@ -25,7 +25,6 @@
 
 use core_files\archive_writer;
 use core\dml\sql_join;
-use mod_quiz\quiz_attempt;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -101,7 +100,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             parent::init($mode, $formclass, $quiz, $cm, $course);
 
         $this->options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
-        $this->options->states = [quiz_attempt::FINISHED];
+        $this->options->states = [\quiz_essaydownload_quiz_attempt_alias::FINISHED];
 
         if ($fromform = $this->form->get_data()) {
             $this->options->process_settings_from_form($fromform);

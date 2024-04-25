@@ -23,14 +23,14 @@
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['byquestion'] = 'Question';
 $string['byattempt'] = 'Attempt';
+$string['byquestion'] = 'Question';
 $string['essaydownload'] = 'Download essay responses';
 $string['groupby'] = 'Group by';
 $string['groupby_help'] = 'The archive can be structured by question or by attempt:<ul><li>If you group by question, the archive will have a folder for every question. Inside each folder, you will have a folder for every attempt.</li><li>If you group by attempt, the archive will have a folder for every attempt. Inside each folder, you will have a folder for every question.</li></ul>';
-$string['includeresponsetext'] = 'Include response text';
-$string['includequestiontext'] = 'Include question text';
 $string['includeattachments'] = 'Include attachments, if there are any';
+$string['includequestiontext'] = 'Include question text';
+$string['includeresponsetext'] = 'Include response text';
 $string['noessayquestion'] = 'This quiz does not contain any essay questions.';
 $string['nothingtodownload'] = 'Nothing to download';
 $string['options'] = 'Options';

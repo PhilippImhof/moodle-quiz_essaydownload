@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Helper functions for Essay responses downloader plugin tests (quiz_essaydownload)
+ * Helper for Essay responses downloader plugin tests (quiz_essaydownload)
  *
  * @package   quiz_essaydownload
  * @copyright 2024 Philipp E. Imhof
@@ -29,6 +29,15 @@ use advanced_testcase;
 use mod_quiz\quiz_attempt;
 use mod_quiz\quiz_settings;
 
+/**
+ * Helper class providing some useful methods for Essay responses downloader plugin unit
+ * tests (quiz_essaydownload).
+ *
+ * @package   quiz_essaydownload
+ * @copyright 2024 Philipp E. Imhof
+ * @author    Philipp E. Imhof
+ * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class quiz_essaydownload_test_helper {
     /**
      * Helper method: Store a test file with a given name and contents in a

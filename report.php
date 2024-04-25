@@ -71,7 +71,21 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
     /** @var int id of the currently selected group */
     protected int $currentgroup;
 
-    #[\Override]
+    /**
+     * Override the parent function, because we have some custom stuff to initialise.
+     *
+     * @param string $mode
+     * @param string $formclass
+     * @param stdClass $quiz
+     * @param stdClass $cm
+     * @param stdClass $course
+     * @return array with four elements:
+     *      0 => integer the current group id (0 for none).
+     *      1 => \core\dml\sql_join Contains joins, wheres, params for all the students in this course.
+     *      2 => \core\dml\sql_join Contains joins, wheres, params for all the students in the current group.
+     *      3 => \core\dml\sql_join Contains joins, wheres, params for all the students to show in the report.
+     *              Will be the same as either element 1 or 2.
+     */
     public function init($mode, $formclass, $quiz, $cm, $course): array {
         global $DB;
 
@@ -109,7 +123,14 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         return [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins];
     }
 
-    #[\Override]
+    /**
+     * Display the form or, if the "Download" button has been pressed, invoke
+     * preparation and shipping of the ZIP archive.
+     *
+     * @param stdClass $quiz this quiz.
+     * @param stdClass $cm the course-module for this quiz.
+     * @param stdClass $course the coures we are in.
+     */
     public function display($quiz, $cm, $course) {
         $this->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 

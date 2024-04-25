@@ -122,7 +122,7 @@ class quiz_essaydownload_test_helper {
     /**
      * Helper method to add a few students to a course.
      *
-     * @param \stdClass $quiz
+     * @param \stdClass $course
      * @return \stdClass[] the generated students
      */
     public static function add_students(\stdClass $course): array {

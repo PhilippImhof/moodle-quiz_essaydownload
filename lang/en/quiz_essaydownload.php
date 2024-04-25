@@ -23,21 +23,18 @@
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Essay responses downloader plugin (quiz_essaydownload)';
-$string['plugindescription'] = 'Download text answers and attachment files submitted in response to essay questions in a quiz.';
-
-$string['essaydownload'] = 'Download essay responses';
-$string['noessayquestion'] = 'This quiz does not contain any essay questions.';
-$string['nothingtodownload'] = 'Nothing to download';
-
-$string['options'] = 'Options';
-$string['groupby'] = 'Group by';
-$string['groupby_help'] = 'The archive can be structured by question or by attempt:<ul><li>If you group by question, the archive will have a folder for every question. Inside each folder, you will have a folder for every attempt.</li><li>If you group by attempt, the archive will have a folder for every attempt. Inside each folder, you will have a folder for every question.</li></ul>';
 $string['byquestion'] = 'Question';
 $string['byattempt'] = 'Attempt';
-$string['whattoinclude'] = 'What to include';
+$string['essaydownload'] = 'Download essay responses';
+$string['groupby'] = 'Group by';
+$string['groupby_help'] = 'The archive can be structured by question or by attempt:<ul><li>If you group by question, the archive will have a folder for every question. Inside each folder, you will have a folder for every attempt.</li><li>If you group by attempt, the archive will have a folder for every attempt. Inside each folder, you will have a folder for every question.</li></ul>';
 $string['includeresponsetext'] = 'Include response text';
 $string['includequestiontext'] = 'Include question text';
 $string['includeattachments'] = 'Include attachments, if there are any';
-
+$string['noessayquestion'] = 'This quiz does not contain any essay questions.';
+$string['nothingtodownload'] = 'Nothing to download';
+$string['options'] = 'Options';
+$string['plugindescription'] = 'Download text answers and attachment files submitted in response to essay questions in a quiz.';
+$string['pluginname'] = 'Essay responses downloader plugin (quiz_essaydownload)';
 $string['privacy:metadata'] = 'The quiz essay download plugin does not store any personal data about any user.';
+$string['whattoinclude'] = 'What to include';

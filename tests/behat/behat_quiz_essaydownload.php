@@ -28,7 +28,12 @@
 require_once(__DIR__ . '/../../../../../../lib/behat/behat_base.php');
 
 /**
- * Step definitions related to quiz_archive.
+ * Behat step definitions for Essay responses downloader plugin (quiz_essaydownload).
+ *
+ * @package   quiz_essaydownload
+ * @copyright 2024 Philipp E. Imhof
+ * @author    Philipp E. Imhof
+ * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class behat_quiz_essaydownload extends behat_question_base {
 
@@ -49,7 +54,7 @@ class behat_quiz_essaydownload extends behat_question_base {
             case 'essaydownload report':
                 return new moodle_url('/mod/quiz/report.php', [
                     'id' => $this->get_cm_by_quiz_name($identifier)->id,
-                    'mode' => 'essaydownload'
+                    'mode' => 'essaydownload',
                 ]);
 
             default:

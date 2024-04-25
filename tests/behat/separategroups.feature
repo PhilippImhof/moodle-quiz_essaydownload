@@ -107,4 +107,3 @@ Feature: Correct handling of groups
     Then I should see "Attempts: 3 (0 from this group)"
     And I should see "Nothing to download"
     And I should not see "There are no students in this group yet"
-

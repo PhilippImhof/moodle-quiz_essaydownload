@@ -34,6 +34,7 @@ require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
  * @copyright 2024 Philipp E. Imhof
  * @author    Philipp E. Imhof
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @coversDefaultClass \quiz_essaydownload_report
  */
 final class report_test extends \advanced_testcase {
     use \quiz_question_helper_test_trait;

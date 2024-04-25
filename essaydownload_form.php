@@ -36,8 +36,21 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
+/**
+ * Class defining the form for a {@see quiz_essaydownload_report}.
+ *
+ * @package   quiz_essaydownload
+ * @copyright 2024 Philipp E. Imhof
+ * @author    Philipp E. Imhof
+ * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class quiz_essaydownload_form extends moodleform {
 
+    /**
+     * Form definition.
+     *
+     * @return void
+     */
     public function definition() {
         $mform = $this->_form;
 

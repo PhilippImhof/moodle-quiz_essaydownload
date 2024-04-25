@@ -39,7 +39,7 @@ require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 final class report_test extends \advanced_testcase {
     use \quiz_question_helper_test_trait;
 
-    public function test_quiz_has_essay_questions_when_it_has() {
+    public function test_quiz_has_essay_questions_when_it_has(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -57,7 +57,7 @@ final class report_test extends \advanced_testcase {
         self::assertTrue($report->quiz_has_essay_questions());
     }
 
-    public function test_quiz_has_essay_questions_when_it_has_random() {
+    public function test_quiz_has_essay_questions_when_it_has_random(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -77,7 +77,7 @@ final class report_test extends \advanced_testcase {
         self::assertTrue($report->quiz_has_essay_questions());
     }
 
-    public function test_quiz_has_essay_questions_when_it_has_not() {
+    public function test_quiz_has_essay_questions_when_it_has_not(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -95,7 +95,7 @@ final class report_test extends \advanced_testcase {
         self::assertFalse($report->quiz_has_essay_questions());
     }
 
-    public function test_quiz_has_essay_questions_when_it_is_empty() {
+    public function test_quiz_has_essay_questions_when_it_is_empty(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -111,7 +111,7 @@ final class report_test extends \advanced_testcase {
         self::assertFalse($report->quiz_has_essay_questions());
     }
 
-    public function test_get_attempts_and_names_without_groups() {
+    public function test_get_attempts_and_names_without_groups(): void {
         $this->resetAfterTest();
 
         // Create a course and a quiz with an essay question.
@@ -159,7 +159,7 @@ final class report_test extends \advanced_testcase {
         }
     }
 
-    public function test_get_attempts_and_names_with_separated_groups() {
+    public function test_get_attempts_and_names_with_separated_groups(): void {
         $this->resetAfterTest();
 
         // Create a course and a quiz with an essay question. The quiz is configured to have
@@ -233,7 +233,7 @@ final class report_test extends \advanced_testcase {
         self::assertCount(3, $fetchedattempts);
     }
 
-    public function test_get_attempts_and_names_with_unfinished_attempt() {
+    public function test_get_attempts_and_names_with_unfinished_attempt(): void {
         $this->resetAfterTest();
 
         // Create a course and a quiz with an essay question.
@@ -266,7 +266,7 @@ final class report_test extends \advanced_testcase {
         self::assertCount(count($students) - 1, $fetchedattempts);
     }
 
-    public function test_get_details_for_attempt_with_single_essay_question() {
+    public function test_get_details_for_attempt_with_single_essay_question(): void {
         $this->resetAfterTest();
 
         // Create a course and a quiz with an essay question.
@@ -316,7 +316,7 @@ final class report_test extends \advanced_testcase {
         }
     }
 
-    public function test_get_details_for_attempt_with_two_essay_questions() {
+    public function test_get_details_for_attempt_with_two_essay_questions(): void {
         $this->resetAfterTest();
 
         // Prepare some data...
@@ -380,7 +380,7 @@ final class report_test extends \advanced_testcase {
         }
     }
 
-    public function test_get_details_for_attempt_with_one_essay_and_two_other_questions() {
+    public function test_get_details_for_attempt_with_one_essay_and_two_other_questions(): void {
         $this->resetAfterTest();
 
         // Create a course and a quiz with an essay question and another one.
@@ -436,7 +436,7 @@ final class report_test extends \advanced_testcase {
         }
     }
 
-    public function test_get_details_for_attempt_with_random_nonessay_question() {
+    public function test_get_details_for_attempt_with_random_nonessay_question(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -479,7 +479,7 @@ final class report_test extends \advanced_testcase {
         self::assertEmpty($details);
     }
 
-    public function test_get_details_for_attempt_with_random_essay_question() {
+    public function test_get_details_for_attempt_with_random_essay_question(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -525,7 +525,7 @@ final class report_test extends \advanced_testcase {
         }
     }
 
-    public function test_get_details_for_attempt_with_text_and_attachment() {
+    public function test_get_details_for_attempt_with_text_and_attachment(): void {
         global $USER;
         $this->resetAfterTest();
         $this->setAdminUser();

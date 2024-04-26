@@ -1,3 +1,6 @@
+![GitHub Release](https://img.shields.io/github/v/release/PhilippImhof/moodle-quiz_essaydownload)
+[![Automated code checks](https://github.com/PhilippImhof/moodle-quiz_essaydownload/actions/workflows/checks.yml/badge.svg)](https://github.com/PhilippImhof/moodle-quiz_essaydownload/actions/workflows/checks.yml) [![Automated testing](https://github.com/PhilippImhof/moodle-quiz_essaydownload/actions/workflows/testing.yml/badge.svg)](https://github.com/PhilippImhof/moodle-quiz_essaydownload/actions/workflows/testing.yml)
+
 moodle-quiz_essaydownload
 -------------------------
 
@@ -24,7 +27,7 @@ For more information, please see the [Moodle docs](https://docs.moodle.org/en/In
 The plugin will then generate a ZIP archive containing the requested data and initiate
 the download in your browser.
 
-Note: No confirmation will be shown. Once you get your ZIP file, the work is done. The
+Note: No confirmation will be shown. Once you get your ZIP file, the work is done.
 
 
 #### Grouping by attempt or question?

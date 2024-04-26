@@ -138,6 +138,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $this->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // If no download has been requested yet, we only display the form.
+        $fromform = $this->form->get_data();
         if (!isset($fromform->download)) {
             $this->display_form();
             return true;
@@ -345,11 +346,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         // to send the user an empty file.
         if ($emptyarchive) {
             $this->notification(get_string('nothingtodownload', 'quiz_essaydownload'));
-            exit();
+        } else {
+            $zipwriter->finish();
         }
-
-        $zipwriter->finish();
-        exit();
     }
 
     /**

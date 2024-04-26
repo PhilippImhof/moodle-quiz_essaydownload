@@ -11,7 +11,7 @@ It has been inspired by the [quiz_downloadsubmissions](https://github.com/IITBom
 
 #### Installation
 
-Install the plugin to the folder `$MOODLE_ROOT/mod/quiz/report/archive`.
+Install the plugin to the folder `$MOODLE_ROOT/mod/quiz/report/essaydownload`.
 
 For more information, please see the [Moodle docs](https://docs.moodle.org/en/Installing_plugins).
 

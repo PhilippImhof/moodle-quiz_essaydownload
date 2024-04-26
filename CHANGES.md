@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.0.1 (2024-04-26)
+
+- bugfix: download button was not working properly
+- testing: add behat test for download button
+- internal: simplified CI
+
 ### 1.0.0 (2024-04-19)
 
 Initial release, inspired by the moodle-quiz_downloadsubmissions plugin. Main features:

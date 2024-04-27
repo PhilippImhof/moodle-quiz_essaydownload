@@ -79,5 +79,5 @@ jobs:
         run: moodle-plugin-ci phpunit --fail-on-warning
 
       - name: Behat features
-        if: ${{ always() }}
+        if: ${{ !cancelled() }}
         run: moodle-plugin-ci behat --auto-rerun 1 --profile chrome

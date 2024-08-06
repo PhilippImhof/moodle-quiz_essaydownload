@@ -348,6 +348,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $this->notification(get_string('nothingtodownload', 'quiz_essaydownload'));
         } else {
             $zipwriter->finish();
+            exit();
         }
     }
 

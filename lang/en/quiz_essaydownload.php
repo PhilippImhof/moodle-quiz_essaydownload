@@ -25,6 +25,8 @@
 
 $string['byattempt'] = 'Attempt';
 $string['byquestion'] = 'Question';
+$string['errorfilename'] = 'error-{$a}.txt';
+$string['errormessage'] = 'An internal error occurred. The archive is probably incomplete. Please contact the developers of the Essay responses downloader plugin (quiz_essaydownload) and send them the details below:';
 $string['essaydownload'] = 'Download essay responses';
 $string['groupby'] = 'Group by';
 $string['groupby_help'] = 'The archive can be structured by question or by attempt:<ul><li>If you group by question, the archive will have a folder for every question. Inside each folder, you will have a folder for every attempt.</li><li>If you group by attempt, the archive will have a folder for every attempt. Inside each folder, you will have a folder for every question.</li></ul>';

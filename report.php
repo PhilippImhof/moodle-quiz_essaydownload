@@ -311,6 +311,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         // In the end, we want to know whether the archive is empty or not.
         $emptyarchive = true;
 
+        // Counter in case of errors.
+        $errors = 0;
+
         // Iterate over every attempt and every question.
         foreach ($this->attempts as $attemptid => $attemptpath) {
             $questions = $this->get_details_for_attempt($attemptid);
@@ -323,21 +326,30 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                     $path = $questionpath . '/' . $attemptpath;
                 }
 
-                if ($this->options->questiontext) {
-                    $zipwriter->add_file_from_string($path . '/' . 'questiontext.txt', $questiondetails['questiontext']);
-                    $emptyarchive = false;
-                }
-
-                if ($this->options->responsetext) {
-                    $zipwriter->add_file_from_string($path . '/' . 'response.txt', $questiondetails['responsetext']);
-                    $emptyarchive = false;
-                }
-
-                if (!empty($questiondetails['attachments']) && $this->options->attachments) {
-                    $emptyarchive = false;
-                    foreach ($questiondetails['attachments'] as $file) {
-                        $zipwriter->add_file_from_stored_file($path . '/attachments/' . $file->get_filename(), $file);
+                try {
+                    if ($this->options->questiontext) {
+                        $zipwriter->add_file_from_string($path . '/' . 'questiontext.txt', $questiondetails['questiontext']);
+                        $emptyarchive = false;
                     }
+
+                    if ($this->options->responsetext) {
+                        $zipwriter->add_file_from_string($path . '/' . 'response.txt', $questiondetails['responsetext']);
+                        $emptyarchive = false;
+                    }
+
+                    if (!empty($questiondetails['attachments']) && $this->options->attachments) {
+                        $emptyarchive = false;
+                        foreach ($questiondetails['attachments'] as $file) {
+                            $zipwriter->add_file_from_stored_file($path . '/attachments/' . $file->get_filename(), $file);
+                        }
+                    }
+                } catch (Throwable $e) {
+                    $emptyarchive = false;
+                    $errors++;
+                    $message = get_string('errormessage', 'quiz_essaydownload');
+                    $message .= "\n\n" . $e->getMessage();
+                    $message .= "\n\n" . $e->getTraceAsString();
+                    $zipwriter->add_file_from_string(get_string('errorfilename', 'quiz_essaydownload', $errors), $message);
                 }
             }
         }

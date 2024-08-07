@@ -283,8 +283,8 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $questionfolder = self::clean_filename($questionfolder);
 
             $details[$questionfolder] = [];
-            $details[$questionfolder]['questiontext'] = $quba->get_question_summary($slot);
-            $details[$questionfolder]['responsetext'] = $quba->get_response_summary($slot);
+            $details[$questionfolder]['questiontext'] = $quba->get_question_summary($slot) ?? '';
+            $details[$questionfolder]['responsetext'] = $quba->get_response_summary($slot) ?? '';
 
             $qa = $quba->get_question_attempt($slot);
             $details[$questionfolder]['attachments'] = $qa->get_last_qt_files('attachments', $quba->get_owning_context()->id);

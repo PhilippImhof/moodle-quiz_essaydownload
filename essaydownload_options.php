@@ -54,7 +54,10 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     /** @var bool whether to include attachments (if there are) in the archive */
     public $attachments = true;
 
-    /** @var bool how to organise the sub folders in the archive (by question or by attempt) */
+    /** @var bool whether to shorten file and path names to workaround a Windows issue */
+    public $shortennames = false;
+
+    /** @var string how to organise the sub folders in the archive (by question or by attempt) */
     public $groupby = 'byattempt';
 
     /**
@@ -81,6 +84,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $toform->responsetext = $this->responsetext;
         $toform->questiontext = $this->questiontext;
         $toform->attachments = $this->attachments;
+        $toform->shortennames = $this->shortennames;
         $toform->groupby = $this->groupby;
 
         return $toform;
@@ -95,6 +99,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->responsetext = $fromform->responsetext;
         $this->questiontext = $fromform->questiontext;
         $this->attachments = $fromform->attachments;
+        $this->shortennames = $fromform->shortennames;
         $this->groupby = $fromform->groupby;
     }
 
@@ -105,6 +110,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->responsetext = optional_param('responsetext', $this->responsetext, PARAM_BOOL);
         $this->questiontext = optional_param('questiontext', $this->questiontext, PARAM_BOOL);
         $this->attachments = optional_param('attachments', $this->attachments, PARAM_BOOL);
+        $this->shortennames = optional_param('shortennames', $this->shortennames, PARAM_BOOL);
         $this->groupby = optional_param('groupby', $this->groupby, PARAM_ALPHA);
     }
 

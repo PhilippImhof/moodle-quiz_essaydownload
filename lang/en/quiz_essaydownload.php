@@ -23,6 +23,7 @@
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['additionalsettings'] = 'Additional settings';
 $string['byattempt'] = 'Attempt';
 $string['byquestion'] = 'Question';
 $string['errorfilename'] = 'error-{$a}.txt';
@@ -39,4 +40,6 @@ $string['options'] = 'Options';
 $string['plugindescription'] = 'Download text answers and attachment files submitted in response to essay questions in a quiz.';
 $string['pluginname'] = 'Essay responses downloader plugin (quiz_essaydownload)';
 $string['privacy:metadata'] = 'The quiz essay download plugin does not store any personal data about any user.';
+$string['shortennames'] = 'Shorten archive name and subfolder names';
+$string['shortennames_help'] = 'If the total path name of an extracted file is larger than 260 characters, this may cause problems with Windows\' built-in extraction tool. In this case, activating this checkbox may help. It might, however, make it more difficult to identify your students, if they have very long names.';
 $string['whattoinclude'] = 'What to include';

@@ -250,8 +250,15 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $result->firstname = substr($result->firstname, 0, 40);
             }
 
+            // The user can choose whether to start with the first name or the last name.
+            if ($this->options->nameordering === 'firstlast') {
+                $name = $result->firstname . '_' . $result->lastname;
+            } else {
+                $name = $result->lastname . '_' . $result->firstname;
+            }
+
             // Build the path for this attempt: <name>_<attemptid>_<date/time finished>.
-            $path = $result->lastname . '_' . $result->firstname . '_' . $result->attemptid;
+            $path = $name . '_' . $result->attemptid;
             $path = $path . '_' .  date('Ymd_His', $result->timefinish);
             $path = self::clean_filename($path);
 

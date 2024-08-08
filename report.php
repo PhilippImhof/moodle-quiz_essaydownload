@@ -243,6 +243,13 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
 
         $attempts = [];
         foreach ($results as $result) {
+            // If the user has requested short filenames, we limit the last and first name to 40
+            // characters each.
+            if ($this->options->shortennames) {
+                $result->lastname = substr($result->lastname, 0, 40);
+                $result->firstname = substr($result->firstname, 0, 40);
+            }
+
             // Build the path for this attempt: <name>_<attemptid>_<date/time finished>.
             $path = $result->lastname . '_' . $result->firstname . '_' . $result->attemptid;
             $path = $path . '_' .  date('Ymd_His', $result->timefinish);
@@ -299,10 +306,16 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
      * @return void
      */
     protected function process_and_download(): void {
+        $quizname = $this->cm->name;
+        // If the user requests shorter file names, we will make sure the quiz' name is not more than
+        // 15 characters.
+        if ($this->options->shortennames) {
+            $quizname = substr($quizname, 0, 15);
+        }
         // The archive's name will be <short name of course> - <quiz name> - <cmid for the quiz>.zip.
         // This makes sure that the name will be unique per quiz, even if two quizzes have the same
         // title. Also, we will replace spaces by underscores.
-        $filename = $this->course->shortname . ' - ' . $this->cm->name . ' - ' . $this->cm->id . '.zip';
+        $filename = $this->course->shortname . ' - ' . $quizname . ' - ' . $this->cm->id . '.zip';
         $filename = self::clean_filename($filename);
 
         // The ZIP will be created on the fly via the stream writer.

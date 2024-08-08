@@ -86,5 +86,16 @@ class quiz_essaydownload_form extends moodleform {
         );
         $mform->addElement('advcheckbox', 'responsetext', get_string('includeresponsetext', 'quiz_essaydownload'));
         $mform->addElement('advcheckbox', 'attachments', get_string('includeattachments', 'quiz_essaydownload'));
+
+        $mform->addElement(
+            'select',
+            'nameordering',
+            get_string('nameordering', 'quiz_essaydownload'),
+            [
+                'lastfirst' => get_string('lastfirst', 'quiz_essaydownload'),
+                'firstlast' => get_string('firstlast', 'quiz_essaydownload'),
+            ]
+        );
+        $mform->setType('nameordering', PARAM_ALPHA);
     }
 }

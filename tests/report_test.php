@@ -615,4 +615,55 @@ final class report_test extends \advanced_testcase {
             }
         }
     }
+
+    public function test_get_details_for_attempt_with_unanswered_question(): void {
+        $this->resetAfterTest();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
+            'name' => 'My Question Title / Test',
+            'questiontext' => ['text' => '<p>Go write your stuff!</p>', 'format' => FORMAT_HTML],
+        ]);
+
+        // Add a student and start an attempt.
+        $student = $generator->create_user();
+        $generator->enrol_user($student->id, $course->id, 'student');
+        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+
+        // Finish the attempt without submitting an answer.
+        $timenow = time();
+        $tosubmit = [1 => ['answer' => '', 'answerformat' => FORMAT_HTML]];
+        $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
+        $attemptobj->process_finish($timenow, false);
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Fetch the attemp using the report's API.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        self::assertCount(1, $fetchedattempts);
+
+        // Fetch the details.
+        $details = $report->get_details_for_attempt(array_keys($fetchedattempts)[0]);
+
+        // We expect the result to be an array with one element. The first key should be
+        // a unique label for the (only) question, containing the question number and its title.
+        // The value should be another array consisting of three keys (questiontext, responsetext, attachments).
+        // There are no attachments in this situation, so this will be an empty array. The other
+        // two are strings. The response text should not contain any HTML tags anymore.
+        self::assertCount(1, $details);
+        foreach ($details as $label => $detail) {
+            self::assertEquals('Question_1_-_My_Question_Title__Test', $label);
+            self::assertEquals('Go write your stuff!', trim($detail['questiontext']));
+            self::assertIsString($detail['responsetext']);
+            self::assertEquals('', $detail['responsetext']);
+            self::assertEmpty($detail['attachments']);
+        }
+    }
 }

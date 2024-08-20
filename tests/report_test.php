@@ -174,6 +174,63 @@ final class report_test extends \advanced_testcase {
         }
     }
 
+    public function test_custom_name_order(): void {
+        $this->resetAfterTest();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        $quiz->name = 'ThisQuizHasAnExtremelyLongTitleBecauseLongTitlesAreJustSoCoolToHave';
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz);
+
+        // Add a student and an attempt.
+        $student = \phpunit_util::get_data_generator()->create_user(['firstname' => 'First', 'lastname' => 'Last']);
+        \phpunit_util::get_data_generator()->enrol_user($student->id, $course->id, 'student');
+        $attempt = $this->attempt_quiz($quiz, $student);
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+
+        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Use reflection to force other name format.
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedoptions = $reflectedreport->getProperty('options');
+        $reflectedoptions->setAccessible(true);
+        $options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
+        $options->nameordering = 'firstlast';
+        $reflectedoptions->setValue($report, $options);
+
+        // Fetch the attemps using the report's API.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+
+        // There should be exactly one attempt.
+        self::assertCount(1, $fetchedattempts);
+
+        $i = 0;
+        foreach ($fetchedattempts as $fetchedid => $fetchedname) {
+            // The attempt is stored in a somewhat obscure way.
+            $attemptobj = $attempt[2]->get_attempt();
+
+            $id = $attemptobj->id;
+            self::assertEquals($id, $fetchedid);
+
+            $firstname = clean_filename(str_replace(' ', '_', $student->firstname));
+            $lastname = clean_filename(str_replace(' ', '_', $student->lastname));
+
+            $name = $firstname . '_' . $lastname . '_' . $id . '_' . date('Ymd_His', $attemptobj->timefinish);
+
+            // We will not compare the minutes and seconds, because there might be a small difference and
+            // we don't really care. If the timestamp is correct up to the hours, we can safely assume the
+            // conversion worked.
+            self::assertStringStartsWith(substr($name, 0, -4), $fetchedname);
+            $i++;
+        }
+    }
+
     public function test_get_attempts_and_names_without_groups(): void {
         $this->resetAfterTest();
 

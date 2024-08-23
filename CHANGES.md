@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.1.0 (2024-08-23)
+
+- improvement: add setting to choose between ordering by first/last or last/first name
+- improvement: add setting to use shorter names and thus avoid problem with Windows' unzipper
+- internal: temporary change CI to work around problem with moodle-plugin-ci
+
 ### 1.0.2 (2024-08-08)
 
 - bugfix: avoid corruption of ZIP file in case of errors

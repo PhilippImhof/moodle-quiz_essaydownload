@@ -54,8 +54,12 @@ class quiz_essaydownload_form extends moodleform {
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('header', 'preferencespage', get_string('options', 'quiz_essaydownload'));
+        $mform->addElement('header', 'generaloptions', get_string('generaloptions', 'quiz_essaydownload'));
         $this->standard_preference_fields($mform);
+
+        $mform->addElement('header', 'pdfoptions', get_string('pdfoptions', 'quiz_essaydownload'));
+        $this->pdf_layout_fields($mform);
+
         $mform->addElement('submit', 'download', get_string('download'));
     }
 
@@ -79,15 +83,6 @@ class quiz_essaydownload_form extends moodleform {
         $mform->addHelpButton('groupby', 'groupby', 'quiz_essaydownload');
 
         $mform->addElement(
-            'advcheckbox',
-            'questiontext',
-            get_string('whattoinclude', 'quiz_essaydownload'),
-            get_string('includequestiontext', 'quiz_essaydownload')
-        );
-        $mform->addElement('advcheckbox', 'responsetext', get_string('includeresponsetext', 'quiz_essaydownload'));
-        $mform->addElement('advcheckbox', 'attachments', get_string('includeattachments', 'quiz_essaydownload'));
-
-        $mform->addElement(
             'select',
             'nameordering',
             get_string('nameordering', 'quiz_essaydownload'),
@@ -100,10 +95,94 @@ class quiz_essaydownload_form extends moodleform {
 
         $mform->addElement(
             'advcheckbox',
+            'attachments',
+            get_string('attachments', 'quiz_essaydownload'),
+            get_string('includeattachments', 'quiz_essaydownload')
+        );
+        $mform->addHelpButton('attachments', 'includeattachments', 'quiz_essaydownload');
+
+        $mform->addElement(
+            'advcheckbox',
+            'questiontext',
+            get_string('questiontext', 'quiz_essaydownload'),
+            get_string('includequestiontext', 'quiz_essaydownload')
+        );
+        $mform->addHelpButton('questiontext', 'includequestiontext', 'quiz_essaydownload');
+
+        $mform->addElement('select', 'fileformat', get_string('fileformat', 'quiz_essaydownload'), [
+            'txt' => get_string('fileformattxt', 'quiz_essaydownload'),
+            'pdf' => get_string('fileformatpdf', 'quiz_essaydownload'),
+        ]);
+        $mform->setType('fileformat', PARAM_ALPHA);
+        $mform->setDefault('fileformat', 'pdf');
+        $mform->addHelpButton('fileformat', 'fileformat', 'quiz_essaydownload');
+
+        $mform->addElement('select', 'source', get_string('source', 'quiz_essaydownload'), [
+            'plain' => get_string('sourcesummary', 'quiz_essaydownload'),
+            'html' => get_string('sourceoriginal', 'quiz_essaydownload'),
+        ]);
+        $mform->disabledIf('source', 'fileformat', 'neq', 'pdf');
+        $mform->setType('source', PARAM_ALPHA);
+        $mform->setDefault('source', 'html');
+        $mform->addHelpButton('source', 'source', 'quiz_essaydownload');
+
+        $mform->addElement(
+            'advcheckbox',
             'shortennames',
-            get_string('additionalsettings', 'quiz_essaydownload'),
+            get_string('compatibility', 'quiz_essaydownload'),
             get_string('shortennames', 'quiz_essaydownload')
         );
         $mform->addHelpButton('shortennames', 'shortennames', 'quiz_essaydownload');
+    }
+
+    /**
+     * Fields to configure the PDF layout.
+     *
+     * @param MoodleQuickForm $mform the form
+     * @return void
+     */
+    protected function pdf_layout_fields(MoodleQuickForm $mform) {
+        $mform->addElement('select', 'page', get_string('page', 'quiz_essaydownload'), [
+            'a4' => get_string('pagea4', 'quiz_essaydownload'),
+            'letter' => get_string('pageletter', 'quiz_essaydownload'),
+        ]);
+        $mform->setType('page', PARAM_ALPHA);
+        $mform->setDefault('page', 'a4');
+        $mform->disabledIf('page', 'fileformat', 'neq', 'pdf');
+
+        $margingroup = [];
+        $margingroup[] = $mform->createElement('text', 'marginleft', '', ['size' => 3]);
+        $mform->setType('marginleft', PARAM_INT);
+        $margingroup[] = $mform->createElement('text', 'marginright', '', ['size' => 3]);
+        $mform->setType('marginright', PARAM_INT);
+        $margingroup[] = $mform->createElement('text', 'margintop', '', ['size' => 3]);
+        $mform->setType('margintop', PARAM_INT);
+        $margingroup[] = $mform->createElement('text', 'marginbottom', '', ['size' => 3]);
+        $mform->setType('marginbottom', PARAM_INT);
+        $mform->addGroup($margingroup, 'margingroup', get_string('margins', 'quiz_essaydownload'), ' ', false);
+        $mform->disabledIf('margingroup', 'fileformat', 'neq', 'pdf');
+
+        $mform->addElement('select', 'linespacing', get_string('linespacing', 'quiz_essaydownload'), [
+            '1' => get_string('linesingle', 'quiz_essaydownload'),
+            '1.5' => get_string('lineoneandhalf', 'quiz_essaydownload'),
+            '2' => get_string('linedouble', 'quiz_essaydownload'),
+        ]);
+        $mform->setType('linespacing', PARAM_FLOAT);
+        $mform->disabledIf('linespacing', 'fileformat', 'neq', 'pdf');
+
+        $mform->addElement('select', 'font', get_string('font', 'quiz_essaydownload'), [
+            'sans' => get_string('fontsans', 'quiz_essaydownload'),
+            'serif' => get_string('fontserif', 'quiz_essaydownload'),
+            'mono' => get_string('fontmono', 'quiz_essaydownload'),
+        ]);
+        $mform->setType('font', PARAM_ALPHA);
+        $mform->setDefault('font', 'serif');
+        $mform->disabledIf('font', 'fileformat', 'neq', 'pdf');
+        $mform->addHelpButton('font', 'font', 'quiz_essaydownload');
+
+        $mform->addElement('text', 'fontsize', get_string('fontsize', 'quiz_essaydownload'), ['size' => 3]);
+        $mform->setType('fontsize', PARAM_INT);
+        $mform->disabledIf('fontsize', 'fileformat', 'neq', 'pdf');
+        $mform->addHelpButton('fontsize', 'fontsize', 'quiz_essaydownload');
     }
 }

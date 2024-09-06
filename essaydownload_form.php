@@ -59,6 +59,8 @@ class quiz_essaydownload_form extends moodleform {
 
         $mform->addElement('header', 'pdfoptions', get_string('pdfoptions', 'quiz_essaydownload'));
         $this->pdf_layout_fields($mform);
+        $mform->setExpanded('pdfoptions', false);
+        $mform->closeHeaderBefore('download');
 
         $mform->addElement('submit', 'download', get_string('download'));
     }
@@ -104,7 +106,7 @@ class quiz_essaydownload_form extends moodleform {
         $mform->addElement(
             'advcheckbox',
             'questiontext',
-            get_string('questiontext', 'quiz_essaydownload'),
+            get_string('questiontext', 'question'),
             get_string('includequestiontext', 'quiz_essaydownload')
         );
         $mform->addHelpButton('questiontext', 'includequestiontext', 'quiz_essaydownload');
@@ -184,5 +186,27 @@ class quiz_essaydownload_form extends moodleform {
         $mform->setType('fontsize', PARAM_INT);
         $mform->disabledIf('fontsize', 'fileformat', 'neq', 'pdf');
         $mform->addHelpButton('fontsize', 'fontsize', 'quiz_essaydownload');
+    }
+
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+
+        // No further validation to be done if using plain text format.
+        if ($data['fileformat'] === 'txt') {
+            return;
+        }
+
+        $margins = [$data['marginleft'], $data['marginright'], $data['margintop'], $data['marginbottom']];
+        foreach ($margins as $margin) {
+            if ($margin > 80 || $margin < 0) {
+                $errors['margingroup'] = get_string('errormargin', 'quiz_essaydownload');
+            }
+        }
+
+        if ($data['fontsize'] > 50 || $data['fontsize'] < 6) {
+            $errors['fontsize'] = get_string('errorfontsize', 'quiz_essaydownload');
+        }
+
+        return $errors;
     }
 }

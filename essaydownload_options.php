@@ -23,8 +23,6 @@
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_quiz\local\reports\attempts_report_options;
-
 defined('MOODLE_INTERNAL') || die();
 
 // This work-around is required until Moodle 4.2 is the lowest version we support.
@@ -55,7 +53,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     public $font = 'sansserif';
 
     /** @var int font size for PDF export */
-    public $fontsize = 11;
+    public $fontsize = 12;
 
     /** @var string how to organise the sub folders in the archive (by question or by attempt) */
     public $groupby = 'byattempt';
@@ -189,8 +187,11 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     }
 
     /**
-     * Override parent method, because our settings cannot be incompatible.
+     * Deal with conflicting options, e.g. user requesting TXT output, but HTML source.
      */
     public function resolve_dependencies() {
+        if ($this->fileformat === 'txt') {
+            $this->source = 'plain';
+        }
     }
 }

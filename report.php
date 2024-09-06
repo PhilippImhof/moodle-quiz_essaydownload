@@ -367,6 +367,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         // The ZIP will be created on the fly via the stream writer.
         $zipwriter = archive_writer::get_stream_writer($filename, archive_writer::ZIP_WRITER);
 
+        // In the end, we want to know whether the archive is empty or not.
+        $emptyarchive = true;
+
         // Counter in case of errors.
         $errors = 0;
 
@@ -405,6 +408,8 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                         $zipwriter->add_file_from_string($path . '/' . 'response.txt', $questiondetails['responsetext']);
                     }
 
+                    $emptyarchive = false;
+
                     // Only include question text if instructed to do so.
                     if ($this->options->questiontext) {
                         if ($this->options->fileformat === 'pdf') {
@@ -424,6 +429,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                         }
                     }
                 } catch (Throwable $e) {
+                    $emptyarchive = false;
                     $errors++;
                     $message = get_string('errormessage', 'quiz_essaydownload');
                     $message .= "\n\n" . $e->getMessage();
@@ -433,8 +439,14 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             }
         }
 
-        $zipwriter->finish();
-        exit();
+        // If we have not added any files to the archive, it is better to output a notification than
+        // to send the user an empty file.
+        if ($emptyarchive) {
+            $this->notification(get_string('nothingtodownload', 'quiz_essaydownload'));
+        } else {
+            $zipwriter->finish();
+            exit();
+        }
     }
 
     /**

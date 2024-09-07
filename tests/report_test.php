@@ -28,6 +28,13 @@ require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/report.php');
 require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/tests/helper.php');
 require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 
+
+// FIXME - TODO: behat for form validation (margins, font size)
+
+// FIXME - TODO: test fetching details with answerformat html/plain and different output e.g. <strong>foo</strong> becoming FOO
+// FIXME - TODO: test fetching questiontext with format html/plain/other and output TXT or PDF (fetch summary or true value + conversion)
+
+
 /**
  * Tests for Essay responses downloader plugin (quiz_essaydownload)
  *
@@ -112,6 +119,7 @@ final class report_test extends \advanced_testcase {
         self::assertFalse($report->quiz_has_essay_questions());
     }
 
+    // FIXME: test for Question_1 or Q1
     public function test_long_names_being_shortened(): void {
         $this->resetAfterTest();
 
@@ -154,12 +162,14 @@ final class report_test extends \advanced_testcase {
         self::assertCount(1, $fetchedattempts);
 
         $i = 0;
-        foreach ($fetchedattempts as $fetchedid => $fetchedname) {
+        foreach ($fetchedattempts as $fetchedid => $fetcheddata) {
             // The attempt is stored in a somewhat obscure way.
             $attemptobj = $attempt[2]->get_attempt();
 
             $id = $attemptobj->id;
             self::assertEquals($id, $fetchedid);
+            self::assertEquals($student->firstname, $fetcheddata['firstname']);
+            self::assertEquals($student->lastname, $fetcheddata['lastname']);
 
             $firstname = clean_filename(str_replace(' ', '_', substr($student->firstname, 0, 40)));
             $lastname = clean_filename(str_replace(' ', '_', substr($student->lastname, 0, 40)));
@@ -169,7 +179,7 @@ final class report_test extends \advanced_testcase {
             // We will not compare the minutes and seconds, because there might be a small difference and
             // we don't really care. If the timestamp is correct up to the hours, we can safely assume the
             // conversion worked.
-            self::assertStringStartsWith(substr($name, 0, -4), $fetchedname);
+            self::assertStringStartsWith(substr($name, 0, -4), $fetcheddata['path']);
             $i++;
         }
     }
@@ -211,12 +221,14 @@ final class report_test extends \advanced_testcase {
         self::assertCount(1, $fetchedattempts);
 
         $i = 0;
-        foreach ($fetchedattempts as $fetchedid => $fetchedname) {
+        foreach ($fetchedattempts as $fetchedid => $fetcheddata) {
             // The attempt is stored in a somewhat obscure way.
             $attemptobj = $attempt[2]->get_attempt();
 
             $id = $attemptobj->id;
             self::assertEquals($id, $fetchedid);
+            self::assertEquals($student->firstname, $fetcheddata['firstname']);
+            self::assertEquals($student->lastname, $fetcheddata['lastname']);
 
             $firstname = clean_filename(str_replace(' ', '_', $student->firstname));
             $lastname = clean_filename(str_replace(' ', '_', $student->lastname));
@@ -226,7 +238,7 @@ final class report_test extends \advanced_testcase {
             // We will not compare the minutes and seconds, because there might be a small difference and
             // we don't really care. If the timestamp is correct up to the hours, we can safely assume the
             // conversion worked.
-            self::assertStringStartsWith(substr($name, 0, -4), $fetchedname);
+            self::assertStringStartsWith(substr($name, 0, -4), $fetcheddata['path']);
             $i++;
         }
     }
@@ -259,12 +271,14 @@ final class report_test extends \advanced_testcase {
         self::assertCount(count($students), $fetchedattempts);
 
         $i = 0;
-        foreach ($fetchedattempts as $fetchedid => $fetchedname) {
+        foreach ($fetchedattempts as $fetchedid => $fetcheddata) {
             // The attempt is stored in a somewhat obscure way.
             $attemptobj = $attempts[$i][2]->get_attempt();
 
             $id = $attemptobj->id;
             self::assertEquals($id, $fetchedid);
+            self::assertEquals($students[$i]->firstname, $fetcheddata['firstname']);
+            self::assertEquals($students[$i]->lastname, $fetcheddata['lastname']);
 
             $firstname = clean_filename(str_replace(' ', '_', $students[$i]->firstname));
             $lastname = clean_filename(str_replace(' ', '_', $students[$i]->lastname));
@@ -274,7 +288,7 @@ final class report_test extends \advanced_testcase {
             // We will not compare the minutes and seconds, because there might be a small difference and
             // we don't really care. If the timestamp is correct up to the hours, we can safely assume the
             // conversion worked.
-            self::assertStringStartsWith(substr($name, 0, -4), $fetchedname);
+            self::assertStringStartsWith(substr($name, 0, -4), $fetcheddata['path']);
             $i++;
         }
     }
@@ -327,6 +341,8 @@ final class report_test extends \advanced_testcase {
         self::assertEquals($id, array_keys($fetchedattempts)[0]);
 
         // Comparing to the second student.
+        self::assertEquals($students[1]->firstname, $fetchedattempts[$id]['firstname']);
+        self::assertEquals($students[1]->lastname, $fetchedattempts[$id]['lastname']);
         $firstname = clean_filename(str_replace(' ', '_', $students[1]->firstname));
         $lastname = clean_filename(str_replace(' ', '_', $students[1]->lastname));
         $name = $lastname . '_' . $firstname . '_' . $id . '_' . date('Ymd_His', $attemptobj->timefinish);
@@ -334,7 +350,7 @@ final class report_test extends \advanced_testcase {
         // We will not compare the minutes and seconds, because there might be a small difference and
         // we don't really care. If the timestamp is correct up to the hours, we can safely assume the
         // conversion worked.
-        self::assertStringStartsWith(substr($name, 0, -4), reset($fetchedattempts));
+        self::assertStringStartsWith(substr($name, 0, -4), $fetchedattempts[$id]['path']);
 
         // Now, add one more student to group 1 and refetch. We'll just check the count.
         $generator->create_group_member(['groupid' => $group1->id, 'userid' => $students[0]->id]);

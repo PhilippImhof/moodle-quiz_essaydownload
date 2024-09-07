@@ -59,7 +59,6 @@ class quiz_essaydownload_form extends moodleform {
 
         $mform->addElement('header', 'pdfoptions', get_string('pdfoptions', 'quiz_essaydownload'));
         $this->pdf_layout_fields($mform);
-        $mform->setExpanded('pdfoptions', false);
         $mform->closeHeaderBefore('download');
 
         $mform->addElement('submit', 'download', get_string('download'));

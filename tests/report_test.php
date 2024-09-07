@@ -28,7 +28,6 @@ require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/report.php');
 require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/tests/helper.php');
 require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 
-
 /**
  * Tests for Essay responses downloader plugin (quiz_essaydownload)
  *
@@ -128,7 +127,7 @@ final class report_test extends \advanced_testcase {
         $student = \phpunit_util::get_data_generator()->create_user(
             [
                 'firstname' => 'ExtremelyLongFirstNameForThisVerySpecificPerson',
-                'lastname' => 'OneThingIsSureThisLastNameIsNotGoingToEndVerySoon'
+                'lastname' => 'OneThingIsSureThisLastNameIsNotGoingToEndVerySoon',
             ]
         );
         \phpunit_util::get_data_generator()->enrol_user($student->id, $course->id, 'student');

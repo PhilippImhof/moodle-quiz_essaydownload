@@ -187,12 +187,19 @@ class quiz_essaydownload_form extends moodleform {
         $mform->addHelpButton('fontsize', 'fontsize', 'quiz_essaydownload');
     }
 
+    /**
+     * Validation of our settings form, e. g. font size or page margins.
+     *
+     * @param array $data submitted data in form ['fieldname' => value]
+     * @param array $files array of uploaded files ['element_name' => tmp_file_path]
+     * @return array errors in form ['element_name' => 'error message'] or [] if no errors
+     */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
         // No further validation to be done if using plain text format.
         if ($data['fileformat'] === 'txt') {
-            return;
+            return $errors;
         }
 
         $margins = [$data['marginleft'], $data['marginright'], $data['margintop'], $data['marginbottom']];

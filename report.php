@@ -457,7 +457,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
      * @param string $type the notification type, e. g. 'error' or 'info' or 'warn'
      * @return void
      */
-    protected function notification(string $message, string $type = 'error') {
+    protected function notification(string $message, string $type = 'error'): void {
         global $OUTPUT;
 
         // Printing the standard header. We'll set $hasquestions and $hasstudents to true here,
@@ -486,7 +486,16 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         return clean_filename(str_replace(' ', '_', $filename));
     }
 
-    protected function generate_pdf(string $text, string $header = '', string $subheader = '', string $author = '') {
+    /**
+     * Generate a PDF file from a given HTML code.
+     *
+     * @param string $text HTML code to be typeset
+     * @param string $header upper line of the header, printed in bold face
+     * @param string $subheader lower line of the header
+     * @param string $author author name to be stored in the document information field
+     * @return string PDF code
+     */
+    protected function generate_pdf(string $text, string $header = '', string $subheader = '', string $author = ''): string {
         // The text might contain \xC2\xA0 for a unicode NON-BREAK SPACE character. This can confuse TCPDF, so we
         // rather remove it here.
         $text = str_replace("\xc2\xa0", "&nbsp;", $text);
@@ -498,11 +507,17 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $doc->SetTitle('');
         $doc->SetKeywords('');
         $doc->SetSubject('');
+
         // The configured top margin is used for the distance between the page's top border and the start of the header.
         $doc->setHeaderMargin($this->options->margintop);
+
         // In order for the document's text to be reasonably separated from the header (and its rule), we add some space
         // relative to linespacing and font size.
-        $doc->SetMargins($this->options->marginleft, $this->options->margintop + $this->options->linespacing * $this->options->fontsize, $this->options->marginright);
+        $doc->SetMargins(
+            $this->options->marginleft,
+            $this->options->margintop + $this->options->linespacing * $this->options->fontsize,
+            $this->options->marginright
+        );
         $doc->setPrintFooter(false);
 
         if ($this->options->font === 'serif') {

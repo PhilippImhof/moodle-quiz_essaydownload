@@ -61,4 +61,3 @@ Feature: Validation and display of the form
     And the "linespacing" "select" should be disabled
     And the "font" "select" should be disabled
     And the "fontsize" "field" should be disabled
-

@@ -42,6 +42,7 @@ if (class_exists('\mod_quiz\local\reports\attempts_report')) {
 
 require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/essaydownload_form.php');
 require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/essaydownload_options.php');
+require_once($CFG->libdir . '/pdflib.php');
 
 /**
  * Quiz report subclass for the quiz_essaydownload report.
@@ -243,6 +244,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
 
         $attempts = [];
         foreach ($results as $result) {
+            $attempts[$result->attemptid]['firstname'] = $result->firstname;
+            $attempts[$result->attemptid]['lastname'] = $result->lastname;
+
             // If the user has requested short filenames, we limit the last and first name to 40
             // characters each.
             if ($this->options->shortennames) {
@@ -262,7 +266,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $path = $path . '_' .  date('Ymd_His', $result->timefinish);
             $path = self::clean_filename($path);
 
-            $attempts[$result->attemptid] = $path;
+            $attempts[$result->attemptid]['path'] = $path;
         }
 
         return $attempts;
@@ -287,20 +291,55 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
 
         $slots = $attemptobj->get_slots();
         foreach ($slots as $slot) {
+            $questiondefinition = $quba->get_question($slot, false);
             // If we are not dealing with an essay question, we can skip this slot.
-            $qtype = $quba->get_question($slot, false)->get_type_name();
+            $qtype = $questiondefinition->get_type_name();
             if ($qtype !== 'essay') {
                 continue;
             }
 
-            $questionfolder = 'Question_' . $attemptobj->get_question_number($slot) . '_-_' . $attemptobj->get_question_name($slot);
+            $qprefix = ($this->options->shortennames ? 'Q_' : 'Question_');
+            $questionfolder = $qprefix . $attemptobj->get_question_number($slot) . '_-_' . $attemptobj->get_question_name($slot);
             $questionfolder = self::clean_filename($questionfolder);
 
             $details[$questionfolder] = [];
+
+            // First, fetch summary for question text and response, because we can easily retrieve it now and use it
+            // as a fallback.
             $details[$questionfolder]['questiontext'] = $quba->get_question_summary($slot) ?? '';
             $details[$questionfolder]['responsetext'] = $quba->get_response_summary($slot) ?? '';
 
+            // If the user wants to use formatted text rather than the summary, fetch the true question text
+            // and response now. Note that this setting will be overridden, if output is TXT instead of PDF.
+            // We use format_text(), because either we currently have the summary (plain-text) or we have
+            // formatted text, but it might be in MARKDOWN or other formats. We consider the text as trusted
+            // (because it has been filtered before) and disable filtering. Also, we do not put <div> tags
+            // around it, as that is done anyway during generation of the PDF.
             $qa = $quba->get_question_attempt($slot);
+            if ($this->options->source === 'html') {
+                $formattingoptions = [
+                    'trusted' => true,
+                    'filter' => false,
+                    'para' => false,
+                ];
+
+                $responsehtml = format_text(
+                    strval($qa->get_last_qt_var('answer', '')),
+                    $qa->get_last_qt_var('answerformat', FORMAT_PLAIN),
+                    $formattingoptions
+                );
+
+                $questionhtml = format_text(
+                    $questiondefinition->questiontext,
+                    $questiondefinition->questiontextformat,
+                    $formattingoptions
+                );
+
+                $details[$questionfolder]['responsetext'] = $responsehtml;
+                $details[$questionfolder]['questiontext'] = $questionhtml;
+            }
+
+            // Finally, fetch attachments, if there are.
             $details[$questionfolder]['attachments'] = $qa->get_last_qt_files('attachments', $quba->get_owning_context()->id);
         }
         return $details;
@@ -335,30 +374,56 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $errors = 0;
 
         // Iterate over every attempt and every question.
-        foreach ($this->attempts as $attemptid => $attemptpath) {
+        foreach ($this->attempts as $attemptid => $attemptdata) {
             $questions = $this->get_details_for_attempt($attemptid);
 
             foreach ($questions as $questionpath => $questiondetails) {
                 // Depending on the user's choice, the files will either be grouped by attempt or by question.
                 if ($this->options->groupby === 'byattempt') {
-                    $path = $attemptpath . '/' . $questionpath;
+                    $path = $attemptdata['path'] . '/' . $questionpath;
                 } else {
-                    $path = $questionpath . '/' . $attemptpath;
+                    $path = $questionpath . '/' . $attemptdata['path'];
+                }
+
+                // Build the full name according to user setting.
+                if ($this->options->nameordering === 'firstlast') {
+                    $fullname = $attemptdata['firstname'] . ' ' . $attemptdata['lastname'];
+                } else {
+                    $fullname = $attemptdata['lastname'] . ' ' . $attemptdata['firstname'];
                 }
 
                 try {
-                    if ($this->options->questiontext) {
-                        $zipwriter->add_file_from_string($path . '/' . 'questiontext.txt', $questiondetails['questiontext']);
-                        $emptyarchive = false;
-                    }
+                    if ($this->options->fileformat === 'pdf') {
+                        $zipwriter->add_file_from_string(
+                            $path . '/' . 'response.pdf',
 
-                    if ($this->options->responsetext) {
+                            $this->generate_pdf(
+                                $questiondetails['responsetext'],
+                                get_string('response', 'quiz_essaydownload'),
+                                $fullname,
+                                $fullname
+                            )
+                        );
+                    } else {
                         $zipwriter->add_file_from_string($path . '/' . 'response.txt', $questiondetails['responsetext']);
-                        $emptyarchive = false;
                     }
 
-                    if (!empty($questiondetails['attachments']) && $this->options->attachments) {
-                        $emptyarchive = false;
+                    $emptyarchive = false;
+
+                    // Only include question text if instructed to do so.
+                    if ($this->options->questiontext) {
+                        if ($this->options->fileformat === 'pdf') {
+                            $zipwriter->add_file_from_string($path . '/' . 'questiontext.pdf', $this->generate_pdf(
+                                $questiondetails['questiontext'],
+                                get_string('questiontext', 'question'),
+                                get_string('presentedto', 'quiz_essaydownload', $fullname)
+                            ));
+                        } else {
+                            $zipwriter->add_file_from_string($path . '/' . 'questiontext.txt', $questiondetails['questiontext']);
+                        }
+                    }
+
+                    if ($this->options->attachments && !empty($questiondetails['attachments'])) {
                         foreach ($questiondetails['attachments'] as $file) {
                             $zipwriter->add_file_from_stored_file($path . '/attachments/' . $file->get_filename(), $file);
                         }
@@ -392,7 +457,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
      * @param string $type the notification type, e. g. 'error' or 'info' or 'warn'
      * @return void
      */
-    protected function notification(string $message, string $type = 'error') {
+    protected function notification(string $message, string $type = 'error'): void {
         global $OUTPUT;
 
         // Printing the standard header. We'll set $hasquestions and $hasstudents to true here,
@@ -419,6 +484,61 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
      */
     protected static function clean_filename(string $filename): string {
         return clean_filename(str_replace(' ', '_', $filename));
+    }
+
+    /**
+     * Generate a PDF file from a given HTML code.
+     *
+     * @param string $text HTML code to be typeset
+     * @param string $header upper line of the header, printed in bold face
+     * @param string $subheader lower line of the header
+     * @param string $author author name to be stored in the document information field
+     * @return string PDF code
+     */
+    protected function generate_pdf(string $text, string $header = '', string $subheader = '', string $author = ''): string {
+        // The text might contain \xC2\xA0 for a unicode NON-BREAK SPACE character. This can confuse TCPDF, so we
+        // rather remove it here.
+        $text = str_replace("\xc2\xa0", "&nbsp;", $text);
+
+        $doc = new pdf('P', 'mm', $this->options->pageformat);
+
+        $doc->SetCreator('quiz_essaydownload plugin for Moodle LMS');
+        $doc->SetAuthor($author);
+        $doc->SetTitle('');
+        $doc->SetKeywords('');
+        $doc->SetSubject('');
+
+        // The configured top margin is used for the distance between the page's top border and the start of the header.
+        $doc->setHeaderMargin($this->options->margintop);
+
+        // In order for the document's text to be reasonably separated from the header (and its rule), we add some space
+        // relative to linespacing and font size.
+        $doc->SetMargins(
+            $this->options->marginleft,
+            $this->options->margintop + $this->options->linespacing * $this->options->fontsize,
+            $this->options->marginright
+        );
+        $doc->setPrintFooter(false);
+
+        if ($this->options->font === 'serif') {
+            $fontname = 'freeserif';
+        } else if ($this->options->font === 'mono') {
+            $fontname = 'freemono';
+        } else {
+            $fontname = 'freesans';
+        }
+        $doc->SetFont($fontname, '', $this->options->fontsize);
+        $doc->setHeaderFont([$fontname, '', $this->options->fontsize]);
+
+        $doc->setHeaderData('', 0, $header, $subheader);
+        $doc->setFooterData();
+        $doc->SetAutoPageBreak(true, $this->options->marginbottom);
+
+        $doc->AddPage();
+        $linespacebase = 1.25;
+        $doc->writeHTML('<div style="line-height: ' . $this->options->linespacing * $linespacebase . ';">' . $text . '</div>');
+
+        return $doc->Output('', 'S');
     }
 
 }

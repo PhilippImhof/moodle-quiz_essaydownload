@@ -127,7 +127,7 @@ final class report_test extends \advanced_testcase {
         $student = \phpunit_util::get_data_generator()->create_user(
             [
                 'firstname' => 'ExtremelyLongFirstNameForThisVerySpecificPerson',
-                'lastname' => 'OneThingIsSureThisLastNameIsNotGoingToEndVerySoon'
+                'lastname' => 'OneThingIsSureThisLastNameIsNotGoingToEndVerySoon',
             ]
         );
         \phpunit_util::get_data_generator()->enrol_user($student->id, $course->id, 'student');
@@ -154,12 +154,14 @@ final class report_test extends \advanced_testcase {
         self::assertCount(1, $fetchedattempts);
 
         $i = 0;
-        foreach ($fetchedattempts as $fetchedid => $fetchedname) {
+        foreach ($fetchedattempts as $fetchedid => $fetcheddata) {
             // The attempt is stored in a somewhat obscure way.
             $attemptobj = $attempt[2]->get_attempt();
 
             $id = $attemptobj->id;
             self::assertEquals($id, $fetchedid);
+            self::assertEquals($student->firstname, $fetcheddata['firstname']);
+            self::assertEquals($student->lastname, $fetcheddata['lastname']);
 
             $firstname = clean_filename(str_replace(' ', '_', substr($student->firstname, 0, 40)));
             $lastname = clean_filename(str_replace(' ', '_', substr($student->lastname, 0, 40)));
@@ -169,9 +171,14 @@ final class report_test extends \advanced_testcase {
             // We will not compare the minutes and seconds, because there might be a small difference and
             // we don't really care. If the timestamp is correct up to the hours, we can safely assume the
             // conversion worked.
-            self::assertStringStartsWith(substr($name, 0, -4), $fetchedname);
+            self::assertStringStartsWith(substr($name, 0, -4), $fetcheddata['path']);
             $i++;
         }
+
+        // Fetch details for first attempt and test whether the prefix ist Q_1 instead of Question_1.
+        $details = $report->get_details_for_attempt(array_keys($fetchedattempts)[0]);
+        self::assertCount(1, $details);
+        self::assertStringStartsWith('Q_1_-_', array_keys($details)[0]);
     }
 
     public function test_custom_name_order(): void {
@@ -211,12 +218,14 @@ final class report_test extends \advanced_testcase {
         self::assertCount(1, $fetchedattempts);
 
         $i = 0;
-        foreach ($fetchedattempts as $fetchedid => $fetchedname) {
+        foreach ($fetchedattempts as $fetchedid => $fetcheddata) {
             // The attempt is stored in a somewhat obscure way.
             $attemptobj = $attempt[2]->get_attempt();
 
             $id = $attemptobj->id;
             self::assertEquals($id, $fetchedid);
+            self::assertEquals($student->firstname, $fetcheddata['firstname']);
+            self::assertEquals($student->lastname, $fetcheddata['lastname']);
 
             $firstname = clean_filename(str_replace(' ', '_', $student->firstname));
             $lastname = clean_filename(str_replace(' ', '_', $student->lastname));
@@ -226,7 +235,7 @@ final class report_test extends \advanced_testcase {
             // We will not compare the minutes and seconds, because there might be a small difference and
             // we don't really care. If the timestamp is correct up to the hours, we can safely assume the
             // conversion worked.
-            self::assertStringStartsWith(substr($name, 0, -4), $fetchedname);
+            self::assertStringStartsWith(substr($name, 0, -4), $fetcheddata['path']);
             $i++;
         }
     }
@@ -259,12 +268,14 @@ final class report_test extends \advanced_testcase {
         self::assertCount(count($students), $fetchedattempts);
 
         $i = 0;
-        foreach ($fetchedattempts as $fetchedid => $fetchedname) {
+        foreach ($fetchedattempts as $fetchedid => $fetcheddata) {
             // The attempt is stored in a somewhat obscure way.
             $attemptobj = $attempts[$i][2]->get_attempt();
 
             $id = $attemptobj->id;
             self::assertEquals($id, $fetchedid);
+            self::assertEquals($students[$i]->firstname, $fetcheddata['firstname']);
+            self::assertEquals($students[$i]->lastname, $fetcheddata['lastname']);
 
             $firstname = clean_filename(str_replace(' ', '_', $students[$i]->firstname));
             $lastname = clean_filename(str_replace(' ', '_', $students[$i]->lastname));
@@ -274,7 +285,7 @@ final class report_test extends \advanced_testcase {
             // We will not compare the minutes and seconds, because there might be a small difference and
             // we don't really care. If the timestamp is correct up to the hours, we can safely assume the
             // conversion worked.
-            self::assertStringStartsWith(substr($name, 0, -4), $fetchedname);
+            self::assertStringStartsWith(substr($name, 0, -4), $fetcheddata['path']);
             $i++;
         }
     }
@@ -327,6 +338,8 @@ final class report_test extends \advanced_testcase {
         self::assertEquals($id, array_keys($fetchedattempts)[0]);
 
         // Comparing to the second student.
+        self::assertEquals($students[1]->firstname, $fetchedattempts[$id]['firstname']);
+        self::assertEquals($students[1]->lastname, $fetchedattempts[$id]['lastname']);
         $firstname = clean_filename(str_replace(' ', '_', $students[1]->firstname));
         $lastname = clean_filename(str_replace(' ', '_', $students[1]->lastname));
         $name = $lastname . '_' . $firstname . '_' . $id . '_' . date('Ymd_His', $attemptobj->timefinish);
@@ -334,7 +347,7 @@ final class report_test extends \advanced_testcase {
         // We will not compare the minutes and seconds, because there might be a small difference and
         // we don't really care. If the timestamp is correct up to the hours, we can safely assume the
         // conversion worked.
-        self::assertStringStartsWith(substr($name, 0, -4), reset($fetchedattempts));
+        self::assertStringStartsWith(substr($name, 0, -4), $fetchedattempts[$id]['path']);
 
         // Now, add one more student to group 1 and refetch. We'll just check the count.
         $generator->create_group_member(['groupid' => $group1->id, 'userid' => $students[0]->id]);
@@ -396,7 +409,7 @@ final class report_test extends \advanced_testcase {
         $quiz = $this->create_test_quiz($course);
         quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
             'name' => 'My Question Title / Test',
-            'questiontext' => ['text' => '<p>Go write your stuff!</p>', 'format' => FORMAT_HTML],
+            'questiontext' => ['text' => 'Go write your stuff!', 'format' => FORMAT_PLAIN],
         ]);
 
         // Add a student and start an attempt.
@@ -406,7 +419,7 @@ final class report_test extends \advanced_testcase {
 
         // Submit a response and finish the attempt.
         $timenow = time();
-        $tosubmit = [1 => ['answer' => '<p>Here we go.</p>', 'answerformat' => FORMAT_HTML]];
+        $tosubmit = [1 => ['answer' => 'Here we go.', 'answerformat' => FORMAT_PLAIN]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
         $attemptobj->process_finish($timenow, false);
 
@@ -453,7 +466,7 @@ final class report_test extends \advanced_testcase {
         foreach ($questionsandanswers as $data) {
             quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
                 'name' => $data['name'],
-                'questiontext' => ['text' => "{$data['text']}", 'format' => FORMAT_HTML],
+                'questiontext' => ['text' => $data['text'], 'format' => FORMAT_PLAIN],
             ]);
         }
 
@@ -465,8 +478,8 @@ final class report_test extends \advanced_testcase {
         // Submit a response and finish the attempt.
         $timenow = time();
         $tosubmit = [
-            1 => ['answer' => "<p>{$questionsandanswers[1]['response']}</p>", 'answerformat' => FORMAT_HTML],
-            2 => ['answer' => "<p>{$questionsandanswers[2]['response']}</p>", 'answerformat' => FORMAT_HTML],
+            1 => ['answer' => $questionsandanswers[1]['response'], 'answerformat' => FORMAT_PLAIN],
+            2 => ['answer' => $questionsandanswers[2]['response'], 'answerformat' => FORMAT_PLAIN],
         ];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
         $attemptobj->process_finish($timenow, false);
@@ -511,7 +524,7 @@ final class report_test extends \advanced_testcase {
         $this->add_two_regular_questions($questiongenerator, $quiz);
         quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
             'name' => 'My Question Title / Test',
-            'questiontext' => ['text' => '<p>Go write your stuff!</p>', 'format' => FORMAT_HTML],
+            'questiontext' => ['text' => 'Go write your stuff!', 'format' => FORMAT_PLAIN],
         ]);
 
         // Add a student and start an attempt.
@@ -525,7 +538,7 @@ final class report_test extends \advanced_testcase {
         $tosubmit = [
             1 => ['answer' => 'frog'],
             2 => ['answer' => '3.14'],
-            3 => ['answer' => '<p>Here we go.</p>', 'answerformat' => FORMAT_HTML],
+            3 => ['answer' => 'Here we go.', 'answerformat' => FORMAT_PLAIN],
         ];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
         $attemptobj->process_finish($timenow, false);
@@ -619,7 +632,7 @@ final class report_test extends \advanced_testcase {
         // resolve to a shortanswer question.
         $timenow = time();
         $tosubmit = [
-            1 => ['answer' => '<p>Foo Bar Quak.</p>', 'answerformat' => FORMAT_HTML],
+            1 => ['answer' => 'Foo Bar Quak.', 'answerformat' => FORMAT_PLAIN],
         ];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
         $attemptobj->process_finish($timenow, false);
@@ -657,7 +670,7 @@ final class report_test extends \advanced_testcase {
         $quiz = $this->create_test_quiz($course);
         quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
             'name' => 'My Question Title / Test',
-            'questiontext' => ['text' => '<p>Go write your stuff!</p>', 'format' => FORMAT_HTML],
+            'questiontext' => ['text' => 'Go write your stuff!', 'format' => FORMAT_PLAIN],
             'responseformat' => 'editorfilepicker',
             'attachments' => 2,
         ]);
@@ -675,8 +688,8 @@ final class report_test extends \advanced_testcase {
         quiz_essaydownload_test_helper::save_file_to_draft_area($usercontextid, $attachementsdraftid, 'greeting.txt', 'Foobar');
         $timenow = time();
         $tosubmit = [1 => [
-            'answer' => '<p>Foo.</p>',
-            'answerformat' => FORMAT_HTML,
+            'answer' => 'Foo.',
+            'answerformat' => FORMAT_PLAIN,
             'answer:itemid' => 1,
             'attachments' => $attachementsdraftid,
         ]];
@@ -694,8 +707,8 @@ final class report_test extends \advanced_testcase {
         // Submit a response and finish the attempt.
         $timenow = time();
         $tosubmit = [1 => [
-            'answer' => '<p>Here we go.</p>',
-            'answerformat' => FORMAT_HTML,
+            'answer' => 'Here we go.',
+            'answerformat' => FORMAT_PLAIN,
             'answer:itemid' => 1,
             'attachments' => $attachementsdraftid,
         ]];
@@ -706,6 +719,14 @@ final class report_test extends \advanced_testcase {
         $report = new quiz_essaydownload_report();
         list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Use reflection to force text source to plain (i. e. summary).
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedoptions = $reflectedreport->getProperty('options');
+        $reflectedoptions->setAccessible(true);
+        $options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
+        $options->source = 'plain';
+        $reflectedoptions->setValue($report, $options);
 
         // Fetch the attemp using the report's API.
         $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
@@ -746,7 +767,7 @@ final class report_test extends \advanced_testcase {
         $quiz = $this->create_test_quiz($course);
         quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
             'name' => 'My Question Title / Test',
-            'questiontext' => ['text' => '<p>Go write your stuff!</p>', 'format' => FORMAT_HTML],
+            'questiontext' => ['text' => 'Go write your stuff!', 'format' => FORMAT_PLAIN],
         ]);
 
         // Add a student and start an attempt.
@@ -756,7 +777,7 @@ final class report_test extends \advanced_testcase {
 
         // Finish the attempt without submitting an answer.
         $timenow = time();
-        $tosubmit = [1 => ['answer' => '', 'answerformat' => FORMAT_HTML]];
+        $tosubmit = [1 => ['answer' => '', 'answerformat' => FORMAT_PLAIN]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
         $attemptobj->process_finish($timenow, false);
 
@@ -786,4 +807,214 @@ final class report_test extends \advanced_testcase {
             self::assertEmpty($detail['attachments']);
         }
     }
+
+    public function test_pdf_from_summary_when_input_is_html(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
+            'name' => 'My Question Title / Test',
+            'questiontext' => ['text' => '<p>Go write <strong>your</strong> stuff!</p>', 'format' => FORMAT_HTML],
+        ]);
+
+        // Add a student and start an attempt.
+        $student = $generator->create_user();
+        $generator->enrol_user($student->id, $course->id, 'student');
+        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+
+        // Submit a response and finish the attempt.
+        $timenow = time();
+        $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
+        $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
+        $attemptobj->process_finish($timenow, false);
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Use reflection to force options.
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedoptions = $reflectedreport->getProperty('options');
+        $reflectedoptions->setAccessible(true);
+        $options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
+        $options->source = 'plain';
+        $reflectedoptions->setValue($report, $options);
+
+        // Fetch the attemp using the report's API.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        self::assertCount(1, $fetchedattempts);
+
+        // Fetch the details.
+        $details = $report->get_details_for_attempt(array_keys($fetchedattempts)[0]);
+
+        // We expect the result to be an array with one element. The data should match the
+        // second response.
+        self::assertCount(1, $details);
+        foreach ($details as $label => $detail) {
+            self::assertEquals('Question_1_-_My_Question_Title__Test', $label);
+            self::assertEquals('Go write YOUR stuff!', trim($detail['questiontext']));
+            self::assertStringStartsWith('Here WE go.', $detail['responsetext']);
+            self::assertCount(0, $detail['attachments']);
+        }
+    }
+
+    public function test_pdf_from_html_when_input_is_html(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
+            'name' => 'My Question Title / Test',
+            'questiontext' => ['text' => '<p>Go write <strong>your</strong> stuff!</p>', 'format' => FORMAT_HTML],
+        ]);
+
+        // Add a student and start an attempt.
+        $student = $generator->create_user();
+        $generator->enrol_user($student->id, $course->id, 'student');
+        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+
+        // Submit a response and finish the attempt.
+        $timenow = time();
+        $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
+        $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
+        $attemptobj->process_finish($timenow, false);
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Fetch the attemp using the report's API.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        self::assertCount(1, $fetchedattempts);
+
+        // Fetch the details.
+        $details = $report->get_details_for_attempt(array_keys($fetchedattempts)[0]);
+
+        // We expect the result to be an array with one element. The data should match the
+        // second response.
+        self::assertCount(1, $details);
+        foreach ($details as $label => $detail) {
+            self::assertEquals('Question_1_-_My_Question_Title__Test', $label);
+            self::assertEquals('<p>Go write <strong>your</strong> stuff!</p>', trim($detail['questiontext']));
+            self::assertStringStartsWith('<p>Here <strong>we</strong> go.</p>', $detail['responsetext']);
+            self::assertCount(0, $detail['attachments']);
+        }
+    }
+
+    public function test_pdf_from_html_when_input_is_plaintext_with_newlines(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
+            'name' => 'My Question Title / Test',
+            'questiontext' => ['text' => '<p>Go write <strong>your</strong> stuff!</p>', 'format' => FORMAT_HTML],
+        ]);
+
+        // Add a student and start an attempt.
+        $student = $generator->create_user();
+        $generator->enrol_user($student->id, $course->id, 'student');
+        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+
+        // Submit a response and finish the attempt.
+        $timenow = time();
+        $tosubmit = [1 => ['answer' => "Here\nwe\ngo.", 'answerformat' => FORMAT_PLAIN]];
+        $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
+        $attemptobj->process_finish($timenow, false);
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Fetch the attemp using the report's API.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        self::assertCount(1, $fetchedattempts);
+
+        // Fetch the details.
+        $details = $report->get_details_for_attempt(array_keys($fetchedattempts)[0]);
+
+        // We expect the result to be an array with one element. The data should match the
+        // second response.
+        self::assertCount(1, $details);
+        foreach ($details as $label => $detail) {
+            self::assertEquals('Question_1_-_My_Question_Title__Test', $label);
+            self::assertEquals('<p>Go write <strong>your</strong> stuff!</p>', trim($detail['questiontext']));
+            self::assertStringStartsWith("Here<br />\nwe<br />\ngo.", $detail['responsetext']);
+            self::assertCount(0, $detail['attachments']);
+        }
+    }
+
+    public function test_txt_when_input_is_html(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
+            'name' => 'My Question Title / Test',
+            'questiontext' => ['text' => '<p>Go write <strong>your</strong> stuff!</p>', 'format' => FORMAT_HTML],
+        ]);
+
+        // Add a student and start an attempt.
+        $student = $generator->create_user();
+        $generator->enrol_user($student->id, $course->id, 'student');
+        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+
+        // Submit a response and finish the attempt.
+        $timenow = time();
+        $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
+        $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
+        $attemptobj->process_finish($timenow, false);
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Use reflection to force options.
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedoptions = $reflectedreport->getProperty('options');
+        $reflectedoptions->setAccessible(true);
+        $options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
+        $options->fileformat = 'txt';
+        $options->source = 'plain';
+        $reflectedoptions->setValue($report, $options);
+
+        // Fetch the attemp using the report's API.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        self::assertCount(1, $fetchedattempts);
+
+        // Fetch the details.
+        $details = $report->get_details_for_attempt(array_keys($fetchedattempts)[0]);
+
+        // We expect the result to be an array with one element. The data should match the
+        // second response.
+        self::assertCount(1, $details);
+        foreach ($details as $label => $detail) {
+            self::assertEquals('Question_1_-_My_Question_Title__Test', $label);
+            self::assertEquals('Go write YOUR stuff!', trim($detail['questiontext']));
+            self::assertStringStartsWith('Here WE go.', $detail['responsetext']);
+            self::assertCount(0, $detail['attachments']);
+        }
+    }
+
 }

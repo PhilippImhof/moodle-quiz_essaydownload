@@ -23,8 +23,6 @@
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use mod_quiz\local\reports\attempts_report_options;
-
 defined('MOODLE_INTERNAL') || die();
 
 // This work-around is required until Moodle 4.2 is the lowest version we support.
@@ -45,23 +43,50 @@ if (class_exists('\mod_quiz\local\reports\attempts_report_options')) {
  */
 class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class_alias {
 
-    /** @var bool whether to include the text response files in the archive */
-    public $responsetext = true;
-
-    /** @var bool whether to include the question text in the archive */
-    public $questiontext = true;
-
     /** @var bool whether to include attachments (if there are) in the archive */
     public $attachments = true;
 
-    /** @var string whether to shorten file and path names to workaround a Windows issue */
-    public $shortennames = false;
+    /** @var string file format TXT or PDF */
+    public $fileformat = 'pdf';
+
+    /** @var string base font family for PDF export */
+    public $font = 'sansserif';
+
+    /** @var int font size for PDF export */
+    public $fontsize = 12;
 
     /** @var string how to organise the sub folders in the archive (by question or by attempt) */
     public $groupby = 'byattempt';
 
+    /** @var float line spacing for PDF export */
+    public $linespacing = 1;
+
+    /** @var int bottom margin for PDF export */
+    public $marginbottom = 20;
+
+    /** @var int left margin for PDF export */
+    public $marginleft = 20;
+
+    /** @var int right margin for PDF export */
+    public $marginright = 20;
+
+    /** @var int top margin for PDF export */
+    public $margintop = 20;
+
     /** @var string whether to have the last name or the first name first */
     public $nameordering = 'lastfirst';
+
+    /** @var string page format for PDF export */
+    public $pageformat = 'a4';
+
+    /** @var bool whether to include the question text in the archive */
+    public $questiontext = true;
+
+    /** @var bool whether to shorten file and path names to workaround a Windows issue */
+    public $shortennames = false;
+
+    /** @var string which source to use: plain-text summary or original HTML text */
+    public $source = 'html';
 
     /**
      * Constructor
@@ -84,12 +109,21 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     public function get_initial_form_data() {
         $toform = new stdClass();
 
-        $toform->responsetext = $this->responsetext;
-        $toform->questiontext = $this->questiontext;
         $toform->attachments = $this->attachments;
-        $toform->shortennames = $this->shortennames;
+        $toform->fileformat = $this->fileformat;
+        $toform->font = $this->font;
+        $toform->fontsize = $this->fontsize;
         $toform->groupby = $this->groupby;
+        $toform->linespacing = $this->linespacing;
+        $toform->marginbottom = $this->marginbottom;
+        $toform->marginleft = $this->marginleft;
+        $toform->marginright = $this->marginright;
+        $toform->margintop = $this->margintop;
         $toform->nameordering = $this->nameordering;
+        $toform->pageformat = $this->pageformat;
+        $toform->questiontext = $this->questiontext;
+        $toform->shortennames = $this->shortennames;
+        $toform->source = $this->source;
 
         return $toform;
     }
@@ -100,24 +134,42 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
      * @param object $fromform data from the settings form
      */
     public function setup_from_form_data($fromform): void {
-        $this->responsetext = $fromform->responsetext;
-        $this->questiontext = $fromform->questiontext;
         $this->attachments = $fromform->attachments;
-        $this->shortennames = $fromform->shortennames;
+        $this->fileformat = $fromform->fileformat;
+        $this->font = $fromform->font ?? '';
+        $this->fontsize = $fromform->fontsize ?? '';
         $this->groupby = $fromform->groupby;
+        $this->linespacing = $fromform->linespacing ?? '';
+        $this->marginbottom = $fromform->marginbottom ?? '';
+        $this->marginleft = $fromform->marginleft ?? '';
+        $this->marginright = $fromform->marginright ?? '';
+        $this->margintop = $fromform->margintop ?? '';
         $this->nameordering = $fromform->nameordering;
+        $this->pageformat = $fromform->pageformat ?? '';
+        $this->questiontext = $fromform->questiontext;
+        $this->shortennames = $fromform->shortennames;
+        $this->source = $fromform->source ?? '';
     }
 
     /**
      * Set the fields of this object from the URL parameters.
      */
     public function setup_from_params() {
-        $this->responsetext = optional_param('responsetext', $this->responsetext, PARAM_BOOL);
-        $this->questiontext = optional_param('questiontext', $this->questiontext, PARAM_BOOL);
         $this->attachments = optional_param('attachments', $this->attachments, PARAM_BOOL);
-        $this->shortennames = optional_param('shortennames', $this->shortennames, PARAM_BOOL);
+        $this->fileformat = optional_param('fileformat', $this->fileformat, PARAM_ALPHA);
+        $this->font = optional_param('font', $this->font, PARAM_ALPHA);
+        $this->fontsize = optional_param('fontsize', $this->fontsize, PARAM_INT);
         $this->groupby = optional_param('groupby', $this->groupby, PARAM_ALPHA);
+        $this->linespacing = optional_param('linespacing', $this->linespacing, PARAM_FLOAT);
+        $this->marginbottom = optional_param('marginbottom', $this->marginbottom, PARAM_INT);
+        $this->marginleft = optional_param('marginleft', $this->marginleft, PARAM_INT);
+        $this->marginright = optional_param('marginright', $this->marginright, PARAM_INT);
+        $this->margintop = optional_param('margintop', $this->margintop, PARAM_INT);
         $this->nameordering = optional_param('nameordering', $this->nameordering, PARAM_ALPHA);
+        $this->pageformat = optional_param('pageformat', $this->pageformat, PARAM_ALPHA);
+        $this->questiontext = optional_param('questiontext', $this->questiontext, PARAM_BOOL);
+        $this->shortennames = optional_param('shortennames', $this->shortennames, PARAM_BOOL);
+        $this->source = optional_param('source', $this->source, PARAM_ALPHA);
     }
 
     /**
@@ -135,8 +187,11 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     }
 
     /**
-     * Override parent method, because our settings cannot be incompatible.
+     * Deal with conflicting options, e.g. user requesting TXT output, but HTML source.
      */
     public function resolve_dependencies() {
+        if ($this->fileformat === 'txt') {
+            $this->source = 'plain';
+        }
     }
 }

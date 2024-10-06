@@ -1,5 +1,12 @@
 # Changelog
 
+### 1.2.0 (2024-10-07)
+
+- assure compatibility with freshly released Moodle 4.5 LTS
+- improvement: add possibility to export formatted responses to PDF
+- internal: added tests
+- internal: remove temporary CI change after bug in moodle-plugin-ci was fixed
+
 ### 1.1.0 (2024-08-23)
 
 - improvement: add setting to choose between ordering by first/last or last/first name

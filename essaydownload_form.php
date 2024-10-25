@@ -110,6 +110,14 @@ class quiz_essaydownload_form extends moodleform {
         );
         $mform->addHelpButton('questiontext', 'includequestiontext', 'quiz_essaydownload');
 
+        $mform->addElement(
+            'advcheckbox',
+            'includestats',
+            get_string('statistics', 'quiz_essaydownload'),
+            get_string('includestats', 'quiz_essaydownload')
+        );
+        $mform->addHelpButton('includestats', 'includestats', 'quiz_essaydownload');
+
         $mform->addElement('select', 'fileformat', get_string('fileformat', 'quiz_essaydownload'), [
             'txt' => get_string('fileformattxt', 'quiz_essaydownload'),
             'pdf' => get_string('fileformatpdf', 'quiz_essaydownload'),

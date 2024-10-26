@@ -130,10 +130,17 @@ class quiz_essaydownload_form extends moodleform {
         $mform->addElement(
             'advcheckbox',
             'shortennames',
-            get_string('compatibility', 'quiz_essaydownload'),
+            get_string('troubleshooting', 'quiz_essaydownload'),
             get_string('shortennames', 'quiz_essaydownload')
         );
         $mform->addHelpButton('shortennames', 'shortennames', 'quiz_essaydownload');
+        $mform->addElement(
+            'advcheckbox',
+            'fixremfontsize',
+            '',
+            get_string('fixremfontsize', 'quiz_essaydownload')
+        );
+        $mform->addHelpButton('fixremfontsize', 'fixremfontsize', 'quiz_essaydownload');
     }
 
     /**

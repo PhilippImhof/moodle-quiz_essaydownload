@@ -49,6 +49,9 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     /** @var string file format TXT or PDF */
     public $fileformat = 'pdf';
 
+    /** @var bool whether to try to work around Atto bug MDL-67360 */
+    public $fixremfontsize = true;
+
     /** @var string base font family for PDF export */
     public $font = 'sansserif';
 
@@ -111,6 +114,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
 
         $toform->attachments = $this->attachments;
         $toform->fileformat = $this->fileformat;
+        $toform->fixremfontsize = $this->fixremfontsize;
         $toform->font = $this->font;
         $toform->fontsize = $this->fontsize;
         $toform->groupby = $this->groupby;
@@ -136,6 +140,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     public function setup_from_form_data($fromform): void {
         $this->attachments = $fromform->attachments;
         $this->fileformat = $fromform->fileformat;
+        $this->fixremfontsize = $fromform->fixremfontsize;
         $this->font = $fromform->font ?? '';
         $this->fontsize = $fromform->fontsize ?? '';
         $this->groupby = $fromform->groupby;
@@ -157,6 +162,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     public function setup_from_params() {
         $this->attachments = optional_param('attachments', $this->attachments, PARAM_BOOL);
         $this->fileformat = optional_param('fileformat', $this->fileformat, PARAM_ALPHA);
+        $this->fixremfontsize = optional_param('fixremfontsize', $this->fixremfontsize, PARAM_BOOL);
         $this->font = optional_param('font', $this->font, PARAM_ALPHA);
         $this->fontsize = optional_param('fontsize', $this->fontsize, PARAM_INT);
         $this->groupby = optional_param('groupby', $this->groupby, PARAM_ALPHA);

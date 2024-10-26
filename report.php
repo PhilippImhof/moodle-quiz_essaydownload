@@ -552,7 +552,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
      * @param string $input the HTML content
      * @return string
      */
-    protected function workaround_atto_font_size_issue(string $input): string {
+    public function workaround_atto_font_size_issue(string $input): string {
         $pattern = '|
             (                    # capturing group #1 for the "prefix"
                 <span[^>]*style  # opening a <span> tag, any stuff before the style attribute
@@ -569,8 +569,6 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 [^>]*>           # possibly other attributes and stuff plus the end of the <span> tag
             )                    # end of capturing group for the "suffix"
             |xiU';
-
-        // $input = 'bla <span>bli</span>bla bla <span foo="bar" style     = "asdfjjklösadfjklö font-size        :   .9375rem;   \' sadflöjklö" align="right"> bla <span style="font-size: 0.9rem">new</span> <span style="font-size: smaller;">goo</span>';
 
         $res = preg_replace_callback(
             $pattern,

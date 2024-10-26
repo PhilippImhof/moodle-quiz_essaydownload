@@ -25,6 +25,7 @@
 
 use core_files\archive_writer;
 use core\dml\sql_join;
+use quiz_essaydownload\customTCPDF;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -40,6 +41,7 @@ if (class_exists('\mod_quiz\local\reports\attempts_report')) {
     class_alias('\quiz_attempt', '\quiz_essaydownload_quiz_attempt_alias');
 }
 
+require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/classes/customTCPDF.php');
 require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/essaydownload_form.php');
 require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/essaydownload_options.php');
 require_once($CFG->libdir . '/pdflib.php');
@@ -505,7 +507,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $text = $this->workaround_atto_font_size_issue($text);
         }
 
-        $doc = new pdf('P', 'mm', $this->options->pageformat);
+        $doc = new customTCPDF('P', 'mm', $this->options->pageformat);
 
         $doc->SetCreator('quiz_essaydownload plugin for Moodle LMS');
         $doc->SetAuthor($author);
@@ -523,7 +525,6 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $this->options->margintop + $this->options->linespacing * $this->options->fontsize,
             $this->options->marginright
         );
-        $doc->setPrintFooter(false);
 
         if ($this->options->font === 'serif') {
             $fontname = 'freeserif';
@@ -534,10 +535,17 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         }
         $doc->SetFont($fontname, '', $this->options->fontsize);
         $doc->setHeaderFont([$fontname, '', $this->options->fontsize]);
-
         $doc->setHeaderData('', 0, $header, $subheader);
-        $doc->setFooterData();
-        $doc->SetAutoPageBreak(true, $this->options->marginbottom);
+
+        // The user may choose to add a footer to each page, by default, there is none.
+        $doc->setPrintFooter(false);
+        if ($this->options->includefooter) {
+            $doc->setPrintFooter(true);
+            // We add 20 mm to the bottom margin in order to accomodate the footer.
+            $doc->SetAutoPageBreak(true, $this->options->marginbottom + 20);
+            // Using 80% of the base font size seems good.
+            $doc->setFooterFont([$fontname, '', round(0.8 * $this->options->fontsize)]);
+        }
 
         $doc->AddPage();
         $linespacebase = 1.25;

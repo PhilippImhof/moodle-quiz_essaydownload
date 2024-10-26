@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.3.0 (2024-10-27)
+
+- improvement: add option to convert relative font-size from rem to percent, working around MDL-67360
+- improvement: add option to include footer with page number
+- improvement: add option to include word and character count
+
 ### 1.2.0 (2024-10-07)
 
 - assure compatibility with freshly released Moodle 4.5 LTS

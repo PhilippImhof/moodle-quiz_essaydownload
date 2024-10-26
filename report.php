@@ -533,8 +533,8 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         // rather remove it here.
         $text = str_replace("\xc2\xa0", "&nbsp;", $text);
 
-        // If using the original text, work around a bug with Atto, see MDL-82753 and MDL-67630.
-        if ($this->options->source === 'html') {
+        // If requested and using the original text, work around a bug with Atto, see MDL-82753 and MDL-67630.
+        if ($this->options->fixremfontsize && $this->options->source === 'html') {
             $text = $this->workaround_atto_font_size_issue($text);
         }
 

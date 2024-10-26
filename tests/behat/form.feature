@@ -53,6 +53,7 @@ Feature: Validation and display of the form
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
     When I set the field "fileformat" to "txt"
     Then the "source" "select" should be disabled
+    And the "fixremfontsize" "field" should be disabled
     And the "page" "select" should be disabled
     And the "marginleft" "field" should be disabled
     And the "marginright" "field" should be disabled
@@ -61,3 +62,8 @@ Feature: Validation and display of the form
     And the "linespacing" "select" should be disabled
     And the "font" "select" should be disabled
     And the "fontsize" "field" should be disabled
+
+  Scenario: Font size workaround should be disabled if source is summary
+    When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    When I set the field "source" to "plain"
+    Then the "fixremfontsize" "field" should be disabled

@@ -500,6 +500,11 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         // rather remove it here.
         $text = str_replace("\xc2\xa0", "&nbsp;", $text);
 
+        // If using the original text, work around a bug with Atto, see MDL-82753 and MDL-67630.
+        if ($this->options->source === 'html') {
+            $text = $this->workaround_atto_font_size_issue($text);
+        }
+
         $doc = new pdf('P', 'mm', $this->options->pageformat);
 
         $doc->SetCreator('quiz_essaydownload plugin for Moodle LMS');
@@ -539,6 +544,44 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $doc->writeHTML('<div style="line-height: ' . $this->options->linespacing * $linespacebase . ';">' . $text . '</div>');
 
         return $doc->Output('', 'S');
+    }
+
+    /**
+     * Atto sometimes adds a <span> tag setting the font size to some rem value, e. g. 0.9375rem. This
+     * will cause the text to be extremely small in the resulting PDF. We try our best to convert those
+     * rem sizes into the appropriate point size, based on the general font size.
+     *
+     * @param string $input the HTML content
+     * @return string
+     */
+    public function workaround_atto_font_size_issue(string $input): string {
+        $pattern = '|
+            (                    # capturing group #1 for the "prefix"
+                <span[^>]*style  # opening a <span> tag, any stuff before the style attribute
+                \s*=\s*          # equal sign may be surrounded by whitespace
+                ([\'"])          # opening quote may be single or double, capture #2 for closing quote
+                [^\2]*font-size  # arbitrary content before the font-size property
+                \s*:\s*          # colon may be surrounded by whitespace
+            )                    # end of capturing group for the "prefix"
+            ([.0-9]+)            # capture the numeric value, group #3
+            \s*rem               # only match for unit rem, other units do not seem to cause trouble
+            (                    # capturing group #4 for the "suffix"
+                [^\2]*           # any other stuff except the opening quote in the style attribute after the font-size
+                \2               # the closing quote of the style attribute
+                [^>]*>           # possibly other attributes and stuff plus the end of the <span> tag
+            )                    # end of capturing group for the "suffix"
+            |xiU';
+
+        $res = preg_replace_callback(
+            $pattern,
+            function ($matches) {
+                $newsize = round(floatval($matches[3]) * 100);
+                return $matches[1] . $newsize . '%' . $matches[4];
+            },
+            $input
+        );
+
+        return $res;
     }
 
 }

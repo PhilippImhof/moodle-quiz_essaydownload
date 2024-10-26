@@ -1017,10 +1017,16 @@ final class report_test extends \advanced_testcase {
         }
     }
 
-    public function provide_texts_with_rem_font_span(): \Generator {
+    /**
+     * Provide data to test the Atto workaround. First line is the expected output,
+     * second line is the input.
+     *
+     * @return \Generator
+     */
+    public static function provide_texts_with_rem_font_span(): \Generator {
         yield 'nothing' => [
                 'foo bar',
-                'foo bar'
+                'foo bar',
         ];
         yield 'one span not font-size' => [
                 'foo <span>bli</span> bar',
@@ -1061,9 +1067,15 @@ final class report_test extends \advanced_testcase {
     }
 
     /**
+     * Test relative font-size conversion from rem to percent.
+     *
      * @dataProvider provide_texts_with_rem_font_span
+     *
+     * @param string $expected expected output after conversion
+     * @param string $input input
+     * @return void
      */
-    public function test_workaround_atto_font_size_issue($expected, $input): void {
+    public function test_workaround_atto_font_size_issue(string $expected, string $input): void {
         $report = new quiz_essaydownload_report();
 
         self::assertEquals(

@@ -172,6 +172,14 @@ class quiz_essaydownload_form extends moodleform {
         $mform->addGroup($margingroup, 'margingroup', get_string('margins', 'quiz_essaydownload'), ' ', false);
         $mform->disabledIf('margingroup', 'fileformat', 'neq', 'pdf');
 
+        $mform->addElement(
+            'advcheckbox',
+            'includefooter',
+            get_string('footer', 'quiz_essaydownload'),
+            get_string('includefooter', 'quiz_essaydownload')
+        );
+        $mform->disabledIf('includefooter', 'fileformat', 'neq', 'pdf');
+
         $mform->addElement('select', 'linespacing', get_string('linespacing', 'quiz_essaydownload'), [
             '1' => get_string('linesingle', 'quiz_essaydownload'),
             '1.5' => get_string('lineoneandhalf', 'quiz_essaydownload'),

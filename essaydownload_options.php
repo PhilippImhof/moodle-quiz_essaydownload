@@ -61,6 +61,9 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     /** @var string how to organise the sub folders in the archive (by question or by attempt) */
     public $groupby = 'byattempt';
 
+    /** @var bool whether a footer containing the page number should be added to PDFs */
+    public $includefooter = false;
+
     /** @var float line spacing for PDF export */
     public $linespacing = 1;
 
@@ -118,6 +121,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $toform->font = $this->font;
         $toform->fontsize = $this->fontsize;
         $toform->groupby = $this->groupby;
+        $toform->includefooter = $this->includefooter;
         $toform->linespacing = $this->linespacing;
         $toform->marginbottom = $this->marginbottom;
         $toform->marginleft = $this->marginleft;
@@ -144,6 +148,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->font = $fromform->font ?? '';
         $this->fontsize = $fromform->fontsize ?? '';
         $this->groupby = $fromform->groupby;
+        $this->includefooter = $fromform->includefooter;
         $this->linespacing = $fromform->linespacing ?? '';
         $this->marginbottom = $fromform->marginbottom ?? '';
         $this->marginleft = $fromform->marginleft ?? '';
@@ -166,6 +171,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->font = optional_param('font', $this->font, PARAM_ALPHA);
         $this->fontsize = optional_param('fontsize', $this->fontsize, PARAM_INT);
         $this->groupby = optional_param('groupby', $this->groupby, PARAM_ALPHA);
+        $this->includefooter = optional_param('includefooter', $this->includefooter, PARAM_BOOL);
         $this->linespacing = optional_param('linespacing', $this->linespacing, PARAM_FLOAT);
         $this->marginbottom = optional_param('marginbottom', $this->marginbottom, PARAM_INT);
         $this->marginleft = optional_param('marginleft', $this->marginleft, PARAM_INT);

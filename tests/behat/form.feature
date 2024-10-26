@@ -59,6 +59,7 @@ Feature: Validation and display of the form
     And the "marginright" "field" should be disabled
     And the "margintop" "field" should be disabled
     And the "marginbottom" "field" should be disabled
+    And the "includefooter" "field" should be disabled
     And the "linespacing" "select" should be disabled
     And the "font" "select" should be disabled
     And the "fontsize" "field" should be disabled

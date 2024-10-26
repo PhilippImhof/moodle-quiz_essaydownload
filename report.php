@@ -558,10 +558,10 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $pattern = '|
             (                    # capturing group #1 for the "prefix"
                 <span[^>]*style  # opening a <span> tag, any stuff before the style attribute
-                \s*=\s*          # equal sign may be surrounded by white space
+                \s*=\s*          # equal sign may be surrounded by whitespace
                 ([\'"])          # opening quote may be single or double, capture #2 for closing quote
                 [^\2]*font-size  # arbitrary content before the font-size property
-                \s*:\s*          # colon may be surrounded by white space
+                \s*:\s*          # colon may be surrounded by whitespace
             )                    # end of capturing group for the "prefix"
             ([.0-9]+)            # capture the numeric value, group #3
             \s*rem               # only match for unit rem, other units do not seem to cause trouble

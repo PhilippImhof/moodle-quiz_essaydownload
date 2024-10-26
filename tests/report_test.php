@@ -1021,48 +1021,50 @@ final class report_test extends \advanced_testcase {
      * Provide data to test the Atto workaround. First line is the expected output,
      * second line is the input.
      *
-     * @return \Generator
+     * @return array
      */
-    public static function provide_texts_with_rem_font_span(): \Generator {
-        yield 'nothing' => [
+    public static function provide_texts_with_rem_font_span(): array {
+        return [
+            'nothing' => [
                 'foo bar',
                 'foo bar',
-        ];
-        yield 'one span not font-size' => [
-                'foo <span>bli</span> bar',
-                'foo <span>bli</span> bar',
-        ];
-        yield 'one span with font-size not rem' => [
-            'foo <span style="font-size: 15px;">bli</span> bar',
-            'foo <span style="font-size: 15px;">bli</span> bar',
-        ];
-        yield 'one span with font-size rem' => [
-            'foo <span style="font-size: 90%;">bli</span> bar',
-            'foo <span style="font-size: 0.9rem;">bli</span> bar',
-        ];
-        yield 'one span with font-size rem and other attributes' => [
-            'foo <span strangeattribute="yes" style="font-size: 90%;" anotherthing>bli</span> bar',
-            'foo <span strangeattribute="yes" style="font-size: 0.9rem;" anotherthing>bli</span> bar',
-        ];
-        yield 'one span with font-size rem and other properties' => [
-            'foo <span style="text-align: left; font-size: 90%; some-obscure-property: true;">bli</span> bar',
-            'foo <span style="text-align: left; font-size: 0.9rem; some-obscure-property: true;">bli</span> bar',
-        ];
-        yield 'one span with font-size rem, uppercase' => [
-            'foo <SPAN style="font-size: 90%;">bli</SPAN> bar',
-            'foo <SPAN style="font-size: 0.9rem;">bli</SPAN> bar',
-        ];
-        yield 'one span with font-size rem, single quote' => [
-            "foo <span style='font-size: 90%;'>bli</span> bar",
-            "foo <span style='font-size: 0.9rem;'>bli</span> bar",
-        ];
-        yield 'two spans with font-size rem' => [
-            'foo <span style="font-size: 90%;">bli</span> goo <span style="font-size: 75%;">dip</span> bar',
-            'foo <span style="font-size: 0.9rem;">bli</span> goo <span style="font-size: 0.75rem;">dip</span> bar',
-        ];
-        yield 'one span font-size rem with whitespace' => [
-            'foo <span style = "font-size:    90%;">bli</span> bar',
-            'foo <span style = "font-size:    0.9   rem;">bli</span> bar',
+            ],
+            'one span not font-size' => [
+                    'foo <span>bli</span> bar',
+                    'foo <span>bli</span> bar',
+            ],
+            'one span with font-size not rem' => [
+                'foo <span style="font-size: 15px;">bli</span> bar',
+                'foo <span style="font-size: 15px;">bli</span> bar',
+            ],
+            'one span with font-size rem' => [
+                'foo <span style="font-size: 90%;">bli</span> bar',
+                'foo <span style="font-size: 0.9rem;">bli</span> bar',
+            ],
+            'one span with font-size rem and other attributes' => [
+                'foo <span strangeattribute="yes" style="font-size: 90%;" anotherthing>bli</span> bar',
+                'foo <span strangeattribute="yes" style="font-size: 0.9rem;" anotherthing>bli</span> bar',
+            ],
+            'one span with font-size rem and other properties' => [
+                'foo <span style="text-align: left; font-size: 90%; some-obscure-property: true;">bli</span> bar',
+                'foo <span style="text-align: left; font-size: 0.9rem; some-obscure-property: true;">bli</span> bar',
+            ],
+            'one span with font-size rem, uppercase' => [
+                'foo <SPAN style="font-size: 90%;">bli</SPAN> bar',
+                'foo <SPAN style="font-size: 0.9rem;">bli</SPAN> bar',
+            ],
+            'one span with font-size rem, single quote' => [
+                "foo <span style='font-size: 90%;'>bli</span> bar",
+                "foo <span style='font-size: 0.9rem;'>bli</span> bar",
+            ],
+            'two spans with font-size rem' => [
+                'foo <span style="font-size: 90%;">bli</span> goo <span style="font-size: 75%;">dip</span> bar',
+                'foo <span style="font-size: 0.9rem;">bli</span> goo <span style="font-size: 0.75rem;">dip</span> bar',
+            ],
+            'one span font-size rem with whitespace' => [
+                'foo <span style = "font-size:    90%;">bli</span> bar',
+                'foo <span style = "font-size:    0.9   rem;">bli</span> bar',
+            ],
         ];
     }
 

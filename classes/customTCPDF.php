@@ -30,11 +30,11 @@ require_once($CFG->libdir . '/pdflib.php');
  */
 
 class customTCPDF extends pdf {
+    const FOOTER_POSITION = 15;
 
     // @codingStandardsIgnoreLine
     public function Footer() {
-        // We place the footer 15 mm away from the bottom.
-        $this->SetY(-15);
+        $this->SetY(-self::FOOTER_POSITION);
 
         // We cannot use getAliasNumPage(), because there seems to be a bug in TCPDF that will cause the
         // footer to be badly centered. The same is true for getAliasNbPages(), but we don't need that
@@ -45,7 +45,7 @@ class customTCPDF extends pdf {
             $pageno = $this->getGroupPageNo();
         }
 
-        $this->Cell(0, 10, get_string('pagenumber', 'quiz_essaydownload', $pageno), 0, 0, 'C');
+        $this->Cell(0, 10, get_string('pagenumber', 'quiz_essaydownload', $pageno), 'T', 0, 'C');
     }
 
 }

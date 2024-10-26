@@ -537,15 +537,17 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $doc->setHeaderFont([$fontname, '', $this->options->fontsize]);
         $doc->setHeaderData('', 0, $header, $subheader);
 
-        // The user may choose to add a footer to each page, by default, there is none.
+        // The user may choose to add a footer to each page, by default, there is none and thus no
+        // need for additional space.
         $doc->setPrintFooter(false);
+        $spaceforfooter = 0;
         if ($this->options->includefooter) {
             $doc->setPrintFooter(true);
-            // We add 20 mm to the bottom margin in order to accomodate the footer.
-            $doc->SetAutoPageBreak(true, $this->options->marginbottom + 20);
+            $spaceforfooter = customTCPDF::FOOTER_POSITION;
             // Using 80% of the base font size seems good.
             $doc->setFooterFont([$fontname, '', round(0.8 * $this->options->fontsize)]);
         }
+        $doc->SetAutoPageBreak(true, $this->options->marginbottom + $spaceforfooter);
 
         $doc->AddPage();
         $linespacebase = 1.25;

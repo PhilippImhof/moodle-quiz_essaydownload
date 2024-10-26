@@ -400,14 +400,17 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                             $path . '/' . 'response.pdf',
 
                             $this->generate_pdf(
-                                $questiondetails['responsetext'],
+                                $this->add_statistics_if_requested($questiondetails['responsetext'], FORMAT_HTML),
                                 get_string('response', 'quiz_essaydownload'),
                                 $fullname,
                                 $fullname
                             )
                         );
                     } else {
-                        $zipwriter->add_file_from_string($path . '/' . 'response.txt', $questiondetails['responsetext']);
+                        $zipwriter->add_file_from_string(
+                            $path . '/' . 'response.txt',
+                            $this->add_statistics_if_requested($questiondetails['responsetext'])
+                        );
                     }
 
                     $emptyarchive = false;
@@ -486,6 +489,34 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
      */
     protected static function clean_filename(string $filename): string {
         return clean_filename(str_replace(' ', '_', $filename));
+    }
+
+    /**
+     * Check whether the text should include word and character count and add that
+     * information, if needed. For HTML text, the stats will be added as a <div>, for
+     * plain text, it will be appended with a blank line.
+     *
+     * @param string $text text to be treated
+     * @param int $format whether the text is in FORMAT_PLAIN or FORMAT_HTML
+     * @return string
+     */
+    protected function add_statistics_if_requested(string $text, int $format = FORMAT_PLAIN): string {
+        if (!$this->options->includestats) {
+            return $text;
+        }
+
+        $stats = (object)[
+            'words' => count_words($text),
+            'chars' => count_letters($text),
+        ];
+
+        $remark = "\n\n" . get_string('statisticsnote', 'quiz_essaydownload', $stats);
+
+        if ($format === FORMAT_HTML) {
+            $remark = '<div>' . $remark . '</div>';
+        }
+
+        return $text . $remark;
     }
 
     /**

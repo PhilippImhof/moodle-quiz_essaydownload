@@ -140,6 +140,8 @@ class quiz_essaydownload_form extends moodleform {
             '',
             get_string('fixremfontsize', 'quiz_essaydownload')
         );
+        $mform->disabledIf('fixremfontsize', 'fileformat', 'neq', 'pdf');
+        $mform->disabledIf('fixremfontsize', 'source', 'neq', 'html');
         $mform->addHelpButton('fixremfontsize', 'fixremfontsize', 'quiz_essaydownload');
     }
 

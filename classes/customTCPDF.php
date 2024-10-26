@@ -16,7 +16,7 @@
 
 namespace quiz_essaydownload;
 
-use \pdf;
+use pdf;
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/pdflib.php');
@@ -28,8 +28,8 @@ require_once($CFG->libdir . '/pdflib.php');
  * @copyright  2024 Philipp Imhof
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class customTCPDF extends pdf {
+    /** @var int footer's distance from bottom of page in millimeters */
     const FOOTER_POSITION = 15;
 
     // @codingStandardsIgnoreLine

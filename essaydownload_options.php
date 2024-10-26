@@ -49,6 +49,9 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     /** @var string file format TXT or PDF */
     public $fileformat = 'pdf';
 
+    /** @var bool whether to try to work around Atto bug MDL-67360 */
+    public $fixremfontsize = true;
+
     /** @var string base font family for PDF export */
     public $font = 'sansserif';
 
@@ -57,6 +60,9 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
 
     /** @var string how to organise the sub folders in the archive (by question or by attempt) */
     public $groupby = 'byattempt';
+
+    /** @var bool whether a footer containing the page number should be added to PDFs */
+    public $includefooter = false;
 
     /** @var bool whether to include a word and character count after the response */
     public $includestats = false;
@@ -114,9 +120,11 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
 
         $toform->attachments = $this->attachments;
         $toform->fileformat = $this->fileformat;
+        $toform->fixremfontsize = $this->fixremfontsize;
         $toform->font = $this->font;
         $toform->fontsize = $this->fontsize;
         $toform->groupby = $this->groupby;
+        $toform->includefooter = $this->includefooter;
         $toform->includestats = $this->includestats;
         $toform->linespacing = $this->linespacing;
         $toform->marginbottom = $this->marginbottom;
@@ -140,9 +148,11 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     public function setup_from_form_data($fromform): void {
         $this->attachments = $fromform->attachments;
         $this->fileformat = $fromform->fileformat;
+        $this->fixremfontsize = $fromform->fixremfontsize;
         $this->font = $fromform->font ?? '';
         $this->fontsize = $fromform->fontsize ?? '';
         $this->groupby = $fromform->groupby;
+        $this->includefooter = $fromform->includefooter;
         $this->includestats = $fromform->includestats;
         $this->linespacing = $fromform->linespacing ?? '';
         $this->marginbottom = $fromform->marginbottom ?? '';
@@ -162,9 +172,11 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     public function setup_from_params() {
         $this->attachments = optional_param('attachments', $this->attachments, PARAM_BOOL);
         $this->fileformat = optional_param('fileformat', $this->fileformat, PARAM_ALPHA);
+        $this->fixremfontsize = optional_param('fixremfontsize', $this->fixremfontsize, PARAM_BOOL);
         $this->font = optional_param('font', $this->font, PARAM_ALPHA);
         $this->fontsize = optional_param('fontsize', $this->fontsize, PARAM_INT);
         $this->groupby = optional_param('groupby', $this->groupby, PARAM_ALPHA);
+        $this->includefooter = optional_param('includefooter', $this->includefooter, PARAM_BOOL);
         $this->includestats = optional_param('includestats', $this->includestats, PARAM_BOOL);
         $this->linespacing = optional_param('linespacing', $this->linespacing, PARAM_FLOAT);
         $this->marginbottom = optional_param('marginbottom', $this->marginbottom, PARAM_INT);

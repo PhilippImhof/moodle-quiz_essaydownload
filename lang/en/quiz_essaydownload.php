@@ -82,5 +82,5 @@ $string['source_help'] = 'If the question text and/or the student\'s response is
 $string['sourceoriginal'] = 'Original HTML formatted text';
 $string['sourcesummary'] = 'Plain-text summary';
 $string['statistics'] = 'Statistics';
-$string['statistics_note'] = '{$a->words} words, {$a->chars} characters (not counting spaces)';
+$string['statisticsnote'] = '{$a->words} words, {$a->chars} characters (not counting spaces)';
 $string['troubleshooting'] = 'Troubleshooting';

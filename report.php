@@ -510,7 +510,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             'chars' => count_letters($text),
         ];
 
-        $remark = "\n\n" . get_string('statistics_note', 'quiz_essaydownload', $stats);
+        $remark = "\n\n" . get_string('statisticsnote', 'quiz_essaydownload', $stats);
 
         if ($format === FORMAT_HTML) {
             $remark = '<div>' . $remark . '</div>';

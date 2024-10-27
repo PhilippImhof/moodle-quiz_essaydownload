@@ -313,7 +313,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
 
             // If the user wants to use formatted text rather than the summary, fetch the true question text
             // and response now. Note that this setting will be overridden, if output is TXT instead of PDF.
-            // We use format_text(), because either we currently have the summary (plain-text) or we have
+            // We use format_text(), because either we currently have the summary (plain-text) or we will have
             // formatted text, but it might be in MARKDOWN or other formats. We consider the text as trusted
             // (because it has been filtered before) and disable filtering. Also, we do not put <div> tags
             // around it, as that is done anyway during generation of the PDF.
@@ -339,6 +339,14 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
 
                 $details[$questionfolder]['responsetext'] = $responsehtml;
                 $details[$questionfolder]['questiontext'] = $questionhtml;
+            } else {
+                // If the user did not choose formatted HTML as their source, but wants PDF output, we should now
+                // call format_text() to convert the plain text summaries into HTML, namely for the linebreaks.
+                if ($this->options->fileformat === 'pdf') {
+                    foreach (['questiontext', 'responsetext'] as $text) {
+                        $details[$questionfolder][$text] = format_text($details[$questionfolder][$text], FORMAT_PLAIN);
+                    }
+                }
             }
 
             // Finally, fetch attachments, if there are.
@@ -512,7 +520,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
 
         $remark = "\n\n" . get_string('statisticsnote', 'quiz_essaydownload', $stats);
 
-        if ($format === FORMAT_HTML) {
+        if ($format == FORMAT_HTML) {
             $remark = '<div>' . $remark . '</div>';
         }
 
@@ -568,17 +576,14 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $doc->setHeaderFont([$fontname, '', $this->options->fontsize]);
         $doc->setHeaderData('', 0, $header, $subheader);
 
-        // The user may choose to add a footer to each page, by default, there is none and thus no
-        // need for additional space.
-        $doc->setPrintFooter(false);
-        $spaceforfooter = 0;
+        // If the footer is requested, enlarge the bottom margin accordingly. Setting the footer's
+        // font size to 80% of the base font size seems good.
         if ($this->options->includefooter) {
-            $doc->setPrintFooter(true);
-            $spaceforfooter = customTCPDF::FOOTER_POSITION;
-            // Using 80% of the base font size seems good.
+            $this->options->marginbottom += customTCPDF::FOOTER_POSITION;
             $doc->setFooterFont([$fontname, '', round(0.8 * $this->options->fontsize)]);
         }
-        $doc->SetAutoPageBreak(true, $this->options->marginbottom + $spaceforfooter);
+        $doc->setPrintFooter($this->options->includefooter);
+        $doc->SetAutoPageBreak(true, $this->options->marginbottom);
 
         $doc->AddPage();
         $linespacebase = 1.25;

@@ -5,6 +5,7 @@
 - improvement: add option to convert relative font-size from rem to percent, working around MDL-67360
 - improvement: add option to include footer with page number
 - improvement: add option to include word and character count
+- bugfix: linebreaks are no longer lost when creating PDF output from plain-text summary
 
 ### 1.2.0 (2024-10-07)
 

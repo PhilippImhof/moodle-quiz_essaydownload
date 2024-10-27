@@ -829,7 +829,7 @@ final class report_test extends \advanced_testcase {
 
         // Submit a response and finish the attempt.
         $timenow = time();
-        $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
+        $tosubmit = [1 => ['answer' => '<p>Here<br>we<br>go.</p><p>Foo</p><div>Bar</div>', 'answerformat' => FORMAT_HTML]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
         $attemptobj->process_finish($timenow, false);
 
@@ -858,8 +858,8 @@ final class report_test extends \advanced_testcase {
         self::assertCount(1, $details);
         foreach ($details as $label => $detail) {
             self::assertEquals('Question_1_-_My_Question_Title__Test', $label);
-            self::assertEquals('Go write YOUR stuff!', trim($detail['questiontext']));
-            self::assertStringStartsWith('Here WE go.', $detail['responsetext']);
+            self::assertEquals('Go write YOUR stuff!<br />', trim($detail['questiontext']));
+            self::assertStringStartsWith("Here<br />\nwe<br />\ngo.<br />\n<br />\nFoo<br />\n<br />\nBar", $detail['responsetext']);
             self::assertCount(0, $detail['attachments']);
         }
     }

@@ -859,7 +859,10 @@ final class report_test extends \advanced_testcase {
         foreach ($details as $label => $detail) {
             self::assertEquals('Question_1_-_My_Question_Title__Test', $label);
             self::assertEquals('Go write YOUR stuff!<br />', trim($detail['questiontext']));
-            self::assertStringStartsWith("Here<br />\nwe<br />\ngo.<br />\n<br />\nFoo<br />\n<br />\nBar", $detail['responsetext']);
+            self::assertStringStartsWith(
+                "Here<br />\nwe<br />\ngo.<br />\n<br />\nFoo<br />\n<br />\nBar",
+                $detail['responsetext']
+            );
             self::assertCount(0, $detail['attachments']);
         }
     }

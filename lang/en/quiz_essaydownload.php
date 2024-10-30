@@ -85,4 +85,4 @@ $string['statistics'] = 'Statistics';
 $string['statisticsnote'] = '{$a->words} words, {$a->chars} characters (not counting spaces)';
 $string['troubleshooting'] = 'Troubleshooting';
 $string['useflatarchive'] = 'Use flat folder hierarchy in archive';
-$string['useflatarchive_help'] = 'If this option is checked, the archive\'s folder hierarchy will be "flatter", i. e. instead of having <tt>Attempt_X/Question_Y/response.pdf</tt> you will have <tt>Attempt_X/Question_Y_response.pdf</tt> (or similar if grouped by question). As a consequence, you will need fewer clicks to get to your document.';
+$string['useflatarchive_help'] = 'If this option is checked, the archive\'s folder hierarchy will be "flatter", i. e. instead of having <i>Attempt_X/Question_Y/response.pdf</i> you will have <i>Attempt_X/Question_Y_response.pdf</i> (or similar if grouped by question). As a consequence, you will need fewer clicks to get your documents.';

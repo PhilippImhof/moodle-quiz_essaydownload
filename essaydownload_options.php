@@ -52,6 +52,9 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     /** @var bool whether to try to work around Atto bug MDL-67360 */
     public $fixremfontsize = true;
 
+    /** @var bool whether to use "flat" folder hierarchy in the archive */
+    public $flatarchive = true;
+
     /** @var string base font family for PDF export */
     public $font = 'sansserif';
 
@@ -121,6 +124,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $toform->attachments = $this->attachments;
         $toform->fileformat = $this->fileformat;
         $toform->fixremfontsize = $this->fixremfontsize;
+        $toform->flatarchive = $this->flatarchive;
         $toform->font = $this->font;
         $toform->fontsize = $this->fontsize;
         $toform->groupby = $this->groupby;
@@ -149,6 +153,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->attachments = $fromform->attachments;
         $this->fileformat = $fromform->fileformat;
         $this->fixremfontsize = $fromform->fixremfontsize;
+        $this->flatarchive = $fromform->flatarchive;
         $this->font = $fromform->font ?? '';
         $this->fontsize = $fromform->fontsize ?? '';
         $this->groupby = $fromform->groupby;
@@ -173,6 +178,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->attachments = optional_param('attachments', $this->attachments, PARAM_BOOL);
         $this->fileformat = optional_param('fileformat', $this->fileformat, PARAM_ALPHA);
         $this->fixremfontsize = optional_param('fixremfontsize', $this->fixremfontsize, PARAM_BOOL);
+        $this->flatarchive = optional_param('flatarchive', $this->flatarchive, PARAM_BOOL);
         $this->font = optional_param('font', $this->font, PARAM_ALPHA);
         $this->fontsize = optional_param('fontsize', $this->fontsize, PARAM_INT);
         $this->groupby = optional_param('groupby', $this->groupby, PARAM_ALPHA);

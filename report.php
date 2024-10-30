@@ -403,10 +403,13 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 }
 
                 try {
+                    // If the user wants a flat archive structure, we will store stuff as attempt_1/question_1_response.pdf
+                    // or question_1/attempt_1_questiontext.pdf or attempt_1/question_1_attachments/... rather than
+                    // as attempt_1/question_1/response.pdf and the like; we proceed accordingly for TXT files.
+                    $filenameprefix = $path . ($this->options->flatarchive ? '_' : '/');
                     if ($this->options->fileformat === 'pdf') {
                         $zipwriter->add_file_from_string(
-                            $path . '/' . 'response.pdf',
-
+                            $filenameprefix . 'response.pdf',
                             $this->generate_pdf(
                                 $this->add_statistics_if_requested($questiondetails['responsetext'], FORMAT_HTML),
                                 get_string('response', 'quiz_essaydownload'),
@@ -416,7 +419,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                         );
                     } else {
                         $zipwriter->add_file_from_string(
-                            $path . '/' . 'response.txt',
+                            $filenameprefix . 'response.txt',
                             $this->add_statistics_if_requested($questiondetails['responsetext'])
                         );
                     }
@@ -426,19 +429,25 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                     // Only include question text if instructed to do so.
                     if ($this->options->questiontext) {
                         if ($this->options->fileformat === 'pdf') {
-                            $zipwriter->add_file_from_string($path . '/' . 'questiontext.pdf', $this->generate_pdf(
-                                $questiondetails['questiontext'],
-                                get_string('questiontext', 'question'),
-                                get_string('presentedto', 'quiz_essaydownload', $fullname)
-                            ));
+                            $zipwriter->add_file_from_string(
+                                $filenameprefix . 'questiontext.pdf',
+                                $this->generate_pdf(
+                                    $questiondetails['questiontext'],
+                                    get_string('questiontext', 'question'),
+                                    get_string('presentedto', 'quiz_essaydownload', $fullname)
+                                )
+                            );
                         } else {
-                            $zipwriter->add_file_from_string($path . '/' . 'questiontext.txt', $questiondetails['questiontext']);
+                            $zipwriter->add_file_from_string(
+                                $filenameprefix . 'questiontext.txt',
+                                $questiondetails['questiontext']
+                            );
                         }
                     }
 
                     if ($this->options->attachments && !empty($questiondetails['attachments'])) {
                         foreach ($questiondetails['attachments'] as $file) {
-                            $zipwriter->add_file_from_stored_file($path . '/attachments/' . $file->get_filename(), $file);
+                            $zipwriter->add_file_from_stored_file($filenameprefix . 'attachments/' . $file->get_filename(), $file);
                         }
                     }
                 } catch (Throwable $e) {

@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.4.0 (2024-11-03)
+
+- improvement: add option for flatter folder hierarchy in archive
+
 ### 1.3.0 (2024-10-27)
 
 - improvement: add option to convert relative font-size from rem to percent, working around MDL-67360

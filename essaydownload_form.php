@@ -84,6 +84,14 @@ class quiz_essaydownload_form extends moodleform {
         $mform->addHelpButton('groupby', 'groupby', 'quiz_essaydownload');
 
         $mform->addElement(
+            'advcheckbox',
+            'flatarchive',
+            '',
+            get_string('useflatarchive', 'quiz_essaydownload')
+        );
+        $mform->addHelpButton('flatarchive', 'useflatarchive', 'quiz_essaydownload');
+
+        $mform->addElement(
             'select',
             'nameordering',
             get_string('nameordering', 'quiz_essaydownload'),

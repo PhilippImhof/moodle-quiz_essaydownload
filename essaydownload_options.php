@@ -197,17 +197,54 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     }
 
     /**
-     * Override parent method, because we do not have settings that are backed by
-     * user-preferences.
+     * Make sure all form fields are set to either the stored value from the user preferences or,
+     * if no pref has been stored, to the default value.
      */
     public function setup_from_user_preferences() {
+        $this->attachments = get_user_preferences('quiz_essaydownload_attachments', $this->attachments);
+        $this->fileformat = get_user_preferences('quiz_essaydownload_fileformat', $this->fileformat);
+        $this->fixremfontsize = get_user_preferences('quiz_essaydownload_fixremfontsize', $this->fixremfontsize);
+        $this->flatarchive = get_user_preferences('quiz_essaydownload_flatarchive', $this->flatarchive);
+        $this->font = get_user_preferences('quiz_essaydownload_font', $this->font);
+        $this->fontsize = get_user_preferences('quiz_essaydownload_fontsize', $this->fontsize);
+        $this->groupby = get_user_preferences('quiz_essaydownload_groupby', $this->groupby);
+        $this->includefooter = get_user_preferences('quiz_essaydownload_includefooter', $this->includefooter);
+        $this->includestats = get_user_preferences('quiz_essaydownload_includestats', $this->includestats);
+        $this->linespacing = get_user_preferences('quiz_essaydownload_linespacing', $this->linespacing);
+        $this->marginbottom = get_user_preferences('quiz_essaydownload_marginbottom', $this->marginbottom);
+        $this->marginleft = get_user_preferences('quiz_essaydownload_marginleft', $this->marginleft);
+        $this->marginright = get_user_preferences('quiz_essaydownload_marginright', $this->marginright);
+        $this->margintop = get_user_preferences('quiz_essaydownload_margintop', $this->margintop);
+        $this->nameordering = get_user_preferences('quiz_essaydownload_nameordering', $this->nameordering);
+        $this->pageformat = get_user_preferences('quiz_essaydownload_pageformat', $this->pageformat);
+        $this->questiontext = get_user_preferences('quiz_essaydownload_questiontext', $this->questiontext);
+        $this->shortennames = get_user_preferences('quiz_essaydownload_shortennames', $this->shortennames);
+        $this->source = get_user_preferences('quiz_essaydownload_source', $this->source);
     }
 
     /**
-     * Override parent method, because we do not have settings that are backed by
-     * user-preferences.
+     * Safe form fields to user preferences.
      */
     public function update_user_preferences() {
+        set_user_preference('quiz_essaydownload_attachments', $this->attachments);
+        set_user_preference('quiz_essaydownload_fileformat', $this->fileformat);
+        set_user_preference('quiz_essaydownload_fixremfontsize', $this->fixremfontsize);
+        set_user_preference('quiz_essaydownload_flatarchive', $this->flatarchive);
+        set_user_preference('quiz_essaydownload_font', $this->font);
+        set_user_preference('quiz_essaydownload_fontsize', $this->fontsize);
+        set_user_preference('quiz_essaydownload_groupby', $this->groupby);
+        set_user_preference('quiz_essaydownload_includefooter', $this->includefooter);
+        set_user_preference('quiz_essaydownload_includestats', $this->includestats);
+        set_user_preference('quiz_essaydownload_linespacing', $this->linespacing);
+        set_user_preference('quiz_essaydownload_marginbottom', $this->marginbottom);
+        set_user_preference('quiz_essaydownload_marginleft', $this->marginleft);
+        set_user_preference('quiz_essaydownload_marginright', $this->marginright);
+        set_user_preference('quiz_essaydownload_margintop', $this->margintop);
+        set_user_preference('quiz_essaydownload_nameordering', $this->nameordering);
+        set_user_preference('quiz_essaydownload_pageformat', $this->pageformat);
+        set_user_preference('quiz_essaydownload_questiontext', $this->questiontext);
+        set_user_preference('quiz_essaydownload_shortennames', $this->shortennames);
+        set_user_preference('quiz_essaydownload_source', $this->source);
     }
 
     /**

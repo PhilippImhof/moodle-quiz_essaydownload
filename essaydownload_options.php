@@ -220,8 +220,6 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->questiontext = get_user_preferences('quiz_essaydownload_questiontext', $this->questiontext);
         $this->shortennames = get_user_preferences('quiz_essaydownload_shortennames', $this->shortennames);
         $this->source = get_user_preferences('quiz_essaydownload_source', $this->source);
-
-        parent::setup_from_user_preferences();
     }
 
     /**
@@ -247,8 +245,6 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         set_user_preference('quiz_essaydownload_questiontext', $this->questiontext);
         set_user_preference('quiz_essaydownload_shortennames', $this->shortennames);
         set_user_preference('quiz_essaydownload_source', $this->source);
-
-        parent::update_user_preferences();
     }
 
     /**

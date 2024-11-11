@@ -587,12 +587,13 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
 
         // If the footer is requested, enlarge the bottom margin accordingly. Setting the footer's
         // font size to 80% of the base font size seems good.
+        $additionalfootermargin = 0;
         if ($this->options->includefooter) {
-            $this->options->marginbottom += customTCPDF::FOOTER_POSITION;
+            $additionalfootermargin = customTCPDF::FOOTER_POSITION;
             $doc->setFooterFont([$fontname, '', round(0.8 * $this->options->fontsize)]);
         }
         $doc->setPrintFooter($this->options->includefooter);
-        $doc->SetAutoPageBreak(true, $this->options->marginbottom);
+        $doc->SetAutoPageBreak(true, $this->options->marginbottom + $additionalfootermargin);
 
         $doc->AddPage();
         $linespacebase = 1.25;

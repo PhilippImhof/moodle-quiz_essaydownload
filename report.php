@@ -555,7 +555,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $text = $this->workaround_atto_font_size_issue($text);
         }
 
-        $doc = new customTCPDF('P', 'mm', $this->options->pageformat);
+        $doc = new customTCPDF('P', 'mm', strtoupper($this->options->pageformat));
 
         $doc->SetCreator('quiz_essaydownload plugin for Moodle LMS');
         $doc->SetAuthor($author);

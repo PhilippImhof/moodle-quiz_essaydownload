@@ -168,13 +168,13 @@ class quiz_essaydownload_form extends moodleform {
      * @return void
      */
     protected function pdf_layout_fields(MoodleQuickForm $mform) {
-        $mform->addElement('select', 'page', get_string('page', 'quiz_essaydownload'), [
+        $mform->addElement('select', 'pageformat', get_string('page', 'quiz_essaydownload'), [
             'a4' => get_string('pagea4', 'quiz_essaydownload'),
             'letter' => get_string('pageletter', 'quiz_essaydownload'),
         ]);
-        $mform->setType('page', PARAM_ALPHA);
-        $mform->setDefault('page', 'a4');
-        $mform->disabledIf('page', 'fileformat', 'neq', 'pdf');
+        $mform->setType('pageformat', PARAM_ALPHANUM);
+        $mform->setDefault('pageformat', 'a4');
+        $mform->disabledIf('pageformat', 'fileformat', 'neq', 'pdf');
 
         $margingroup = [];
         $margingroup[] = $mform->createElement('text', 'marginleft', '', ['size' => 3]);

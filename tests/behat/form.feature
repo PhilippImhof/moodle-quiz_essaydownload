@@ -54,7 +54,7 @@ Feature: Validation and display of the form
     When I set the field "fileformat" to "txt"
     Then the "source" "select" should be disabled
     And the "fixremfontsize" "field" should be disabled
-    And the "page" "select" should be disabled
+    And the "pageformat" "select" should be disabled
     And the "marginleft" "field" should be disabled
     And the "marginright" "field" should be disabled
     And the "margintop" "field" should be disabled

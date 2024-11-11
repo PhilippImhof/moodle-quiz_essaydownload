@@ -228,23 +228,29 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     public function update_user_preferences() {
         set_user_preference('quiz_essaydownload_attachments', $this->attachments);
         set_user_preference('quiz_essaydownload_fileformat', $this->fileformat);
-        set_user_preference('quiz_essaydownload_fixremfontsize', $this->fixremfontsize);
         set_user_preference('quiz_essaydownload_flatarchive', $this->flatarchive);
-        set_user_preference('quiz_essaydownload_font', $this->font);
-        set_user_preference('quiz_essaydownload_fontsize', $this->fontsize);
         set_user_preference('quiz_essaydownload_groupby', $this->groupby);
-        set_user_preference('quiz_essaydownload_includefooter', $this->includefooter);
         set_user_preference('quiz_essaydownload_includestats', $this->includestats);
-        set_user_preference('quiz_essaydownload_linespacing', $this->linespacing);
-        set_user_preference('quiz_essaydownload_marginbottom', $this->marginbottom);
-        set_user_preference('quiz_essaydownload_marginleft', $this->marginleft);
-        set_user_preference('quiz_essaydownload_marginright', $this->marginright);
-        set_user_preference('quiz_essaydownload_margintop', $this->margintop);
         set_user_preference('quiz_essaydownload_nameordering', $this->nameordering);
-        set_user_preference('quiz_essaydownload_pageformat', $this->pageformat);
         set_user_preference('quiz_essaydownload_questiontext', $this->questiontext);
         set_user_preference('quiz_essaydownload_shortennames', $this->shortennames);
-        set_user_preference('quiz_essaydownload_source', $this->source);
+
+        // The following settings should only be stored, if the user creates PDF files, because if they
+        // don't, the corresponding fields will be disabled and have no values, so the user pref would
+        // be removed and thus the field would not be pre-filled next time.
+        if ($this->fileformat === 'pdf') {
+            set_user_preference('quiz_essaydownload_fixremfontsize', $this->fixremfontsize);
+            set_user_preference('quiz_essaydownload_font', $this->font);
+            set_user_preference('quiz_essaydownload_fontsize', $this->fontsize);
+            set_user_preference('quiz_essaydownload_includefooter', $this->includefooter);
+            set_user_preference('quiz_essaydownload_linespacing', $this->linespacing);
+            set_user_preference('quiz_essaydownload_marginbottom', $this->marginbottom);
+            set_user_preference('quiz_essaydownload_marginleft', $this->marginleft);
+            set_user_preference('quiz_essaydownload_marginright', $this->marginright);
+            set_user_preference('quiz_essaydownload_margintop', $this->margintop);
+            set_user_preference('quiz_essaydownload_pageformat', $this->pageformat);
+            set_user_preference('quiz_essaydownload_source', $this->source);
+        }
     }
 
     /**

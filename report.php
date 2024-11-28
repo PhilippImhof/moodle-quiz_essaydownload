@@ -77,6 +77,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
     /** @var int id of the currently selected group */
     protected int $currentgroup;
 
+    /** @var customTCPDF output buffer when storing multiple questions in one PDF file */
+    protected ?customTCPDF $pdfoutputbuffer = null;
+
     /**
      * Override the parent function, because we have some custom stuff to initialise.
      *
@@ -387,13 +390,25 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         foreach ($this->attempts as $attemptid => $attemptdata) {
             $questions = $this->get_details_for_attempt($attemptid);
 
+            // We need to know the question number and the total number of questions, in case the user wants
+            // to have all responses in one single file.
+            $questionno = 0;
+            $nbquestions = count($questions);
+
             foreach ($questions as $questionpath => $questiondetails) {
+                $questionno++;
+
                 // Depending on the user's choice, the files will either be grouped by attempt or by question.
                 if ($this->options->groupby === 'byattempt') {
                     $path = $attemptdata['path'] . '/' . $questionpath;
                 } else {
                     $path = $questionpath . '/' . $attemptdata['path'];
                 }
+                // If the user wants all questions in one single PDF, we will use a special filename.
+                // The parts of the path name (attempt and question path) do not contain any slashes, because
+                // they have been cleaned via PARAM_FILE. So we can just chop off at the slash and add our new
+                // "allquestions" path component.
+                $groupedpath = strstr($path, '/', true) . '_allquestions_';
 
                 // Build the full name according to user setting.
                 if ($this->options->nameordering === 'firstlast') {
@@ -408,15 +423,32 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                     // as attempt_1/question_1/response.pdf and the like; we proceed accordingly for TXT files.
                     $filenameprefix = $path . ($this->options->flatarchive ? '_' : '/');
                     if ($this->options->fileformat === 'pdf') {
-                        $zipwriter->add_file_from_string(
-                            $filenameprefix . 'response.pdf',
-                            $this->generate_pdf(
-                                $this->add_statistics_if_requested($questiondetails['responsetext'], FORMAT_HTML),
-                                get_string('response', 'quiz_essaydownload'),
-                                $fullname,
-                                $fullname
-                            )
+                        // We will ship out the PDF if (a) the user does not want all answers in one file or
+                        // (b) we are at the last question for this attempt.
+                        $shipout = ($this->options->allinone == false) || ($nbquestions == $questionno);
+
+                        if ($this->options->allinone) {
+                            $header = get_string('responsewith', 'quiz_essaydownload', $questionno);
+                        } else {
+                            $header = get_string('response', 'quiz_essaydownload');
+                        }
+
+                        $pdfcontent = $this->generate_pdf(
+                            $this->add_statistics_if_requested($questiondetails['responsetext'], FORMAT_HTML),
+                            $header,
+                            $fullname,
+                            $fullname,
+                            $shipout
                         );
+
+                        // If the return value is not empty, i. e. if we are shipping out, we must now create a PDF file
+                        // in the archive.
+                        if ($pdfcontent !== '') {
+                            $zipwriter->add_file_from_string(
+                                ($this->options->allinone ? $groupedpath : $filenameprefix) . 'response.pdf',
+                                $pdfcontent
+                            );
+                        }
                     } else {
                         $zipwriter->add_file_from_string(
                             $filenameprefix . 'response.txt',
@@ -543,9 +575,16 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
      * @param string $header upper line of the header, printed in bold face
      * @param string $subheader lower line of the header
      * @param string $author author name to be stored in the document information field
+     * @param bool $shipout whether to finish the PDF and deliver it to the caller
      * @return string PDF code
      */
-    protected function generate_pdf(string $text, string $header = '', string $subheader = '', string $author = ''): string {
+    protected function generate_pdf(
+        string $text,
+        string $header = '',
+        string $subheader = '',
+        string $author = '',
+        bool $shipout = true
+    ): string {
         // The text might contain \xC2\xA0 for a unicode NON-BREAK SPACE character. This can confuse TCPDF, so we
         // rather remove it here.
         $text = str_replace("\xc2\xa0", "&nbsp;", $text);
@@ -555,6 +594,38 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $text = $this->workaround_atto_font_size_issue($text);
         }
 
+        // If there is no pending output, we create a new PDF document. Otherwise, we continue with the
+        // document that has been created earlier.
+        $doc = &$this->pdfoutputbuffer;
+        if ($doc === null) {
+            $doc = $this->prepare_pdf_document($author);
+        }
+
+        // Start a new page group and a new page and set the header.
+        $doc->resetHeaderTemplate();
+        $doc->setHeaderData('', 0, $header, $subheader);
+        $doc->startPageGroup();
+        $doc->AddPage();
+
+        $linespacebase = 1.25;
+        $doc->writeHTML('<div style="line-height: ' . $this->options->linespacing * $linespacebase . ';">' . $text . '</div>');
+
+        // If we ship out, we finish the PDF, reset the output buffer. Otherwise, we simply return an empty string.
+        if ($shipout) {
+            $output = $doc->Output('', 'S');
+            $this->pdfoutputbuffer = null;
+            return $output;
+        }
+        return '';
+    }
+
+    /**
+     * Set up a new PDF document with our default settings.
+     *
+     * @param string $author author name to be stored in the document information field
+     * @return customTCPDF
+     */
+    protected function prepare_pdf_document(string $author = ''): customTCPDF {
         $doc = new customTCPDF('P', 'mm', strtoupper($this->options->pageformat));
 
         $doc->SetCreator('quiz_essaydownload plugin for Moodle LMS');
@@ -583,7 +654,6 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         }
         $doc->SetFont($fontname, '', $this->options->fontsize);
         $doc->setHeaderFont([$fontname, '', $this->options->fontsize]);
-        $doc->setHeaderData('', 0, $header, $subheader);
 
         // If the footer is requested, enlarge the bottom margin accordingly. Setting the footer's
         // font size to 80% of the base font size seems good.
@@ -595,11 +665,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $doc->setPrintFooter($this->options->includefooter);
         $doc->SetAutoPageBreak(true, $this->options->marginbottom + $additionalfootermargin);
 
-        $doc->AddPage();
-        $linespacebase = 1.25;
-        $doc->writeHTML('<div style="line-height: ' . $this->options->linespacing * $linespacebase . ';">' . $text . '</div>');
-
-        return $doc->Output('', 'S');
+        return $doc;
     }
 
     /**

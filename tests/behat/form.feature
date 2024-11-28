@@ -53,6 +53,7 @@ Feature: Validation and display of the form
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
     When I set the field "fileformat" to "txt"
     Then the "source" "select" should be disabled
+    And the "allinone" "field" should be disabled
     And the "fixremfontsize" "field" should be disabled
     And the "pageformat" "select" should be disabled
     And the "marginleft" "field" should be disabled
@@ -68,3 +69,8 @@ Feature: Validation and display of the form
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
     When I set the field "source" to "plain"
     Then the "fixremfontsize" "field" should be disabled
+
+  Scenario: Storing all answers in one file should be disabled if flat hierarchy is not enabled
+    When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    When I click on "flatarchive" "checkbox"
+    Then the "allinone" "field" should be disabled

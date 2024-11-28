@@ -43,6 +43,9 @@ if (class_exists('\mod_quiz\local\reports\attempts_report_options')) {
  */
 class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class_alias {
 
+    /** @var bool whether to group all answers from an attempt into a single file */
+    public $allinone = false;
+
     /** @var bool whether to include attachments (if there are) in the archive */
     public $attachments = true;
 
@@ -121,6 +124,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     public function get_initial_form_data() {
         $toform = new stdClass();
 
+        $toform->allinone = $this->allinone;
         $toform->attachments = $this->attachments;
         $toform->fileformat = $this->fileformat;
         $toform->fixremfontsize = $this->fixremfontsize;
@@ -150,6 +154,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
      * @param object $fromform data from the settings form
      */
     public function setup_from_form_data($fromform): void {
+        $this->allinone = $fromform->allinone;
         $this->attachments = $fromform->attachments;
         $this->fileformat = $fromform->fileformat;
         $this->fixremfontsize = $fromform->fixremfontsize;
@@ -175,6 +180,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
      * Set the fields of this object from the URL parameters.
      */
     public function setup_from_params() {
+        $this->allinone = optional_param('allinone', $this->allinone, PARAM_BOOL);
         $this->attachments = optional_param('attachments', $this->attachments, PARAM_BOOL);
         $this->fileformat = optional_param('fileformat', $this->fileformat, PARAM_ALPHA);
         $this->fixremfontsize = optional_param('fixremfontsize', $this->fixremfontsize, PARAM_BOOL);
@@ -201,6 +207,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
      * if no pref has been stored, to the default value.
      */
     public function setup_from_user_preferences() {
+        $this->allinone = get_user_preferences('quiz_essaydownload_allinone', $this->allinone);
         $this->attachments = get_user_preferences('quiz_essaydownload_attachments', $this->attachments);
         $this->fileformat = get_user_preferences('quiz_essaydownload_fileformat', $this->fileformat);
         $this->fixremfontsize = get_user_preferences('quiz_essaydownload_fixremfontsize', $this->fixremfontsize);
@@ -239,6 +246,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         // don't, the corresponding fields will be disabled and have no values, so the user pref would
         // be removed and thus the field would not be pre-filled next time.
         if ($this->fileformat === 'pdf') {
+            set_user_preference('quiz_essaydownload_allinone', $this->allinone);
             set_user_preference('quiz_essaydownload_fixremfontsize', $this->fixremfontsize);
             set_user_preference('quiz_essaydownload_font', $this->font);
             set_user_preference('quiz_essaydownload_fontsize', $this->fontsize);

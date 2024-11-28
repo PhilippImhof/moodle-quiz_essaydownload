@@ -23,6 +23,8 @@
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['allinone'] = 'All answers in one file per attempt';
+$string['allinone_help'] = 'If this option is enabled, all the answers will be grouped in one file per attempt.';
 $string['attachments'] = 'Attachments';
 $string['byattempt'] = 'Attempt';
 $string['byquestion'] = 'Question';
@@ -75,6 +77,7 @@ $string['pluginname'] = 'Essay responses downloader plugin (quiz_essaydownload)'
 $string['presentedto'] = 'Presented to: {$a}';
 $string['privacy:metadata'] = 'The quiz essay download plugin does not store any personal data about any user.';
 $string['response'] = 'Response';
+$string['responsewith'] = 'Response to Question {$a}';
 $string['shortennames'] = 'Shorten archive name and subfolder names.';
 $string['shortennames_help'] = 'If the total path name of an extracted file is longer than 260 characters, this may cause problems with Windows\' built-in extraction tool. In this case, activating this checkbox may help. It might, however, make it more difficult to identify your students, if they have very long names.';
 $string['source'] = 'Text source to use';

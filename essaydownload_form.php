@@ -92,6 +92,17 @@ class quiz_essaydownload_form extends moodleform {
         $mform->addHelpButton('flatarchive', 'useflatarchive', 'quiz_essaydownload');
 
         $mform->addElement(
+            'advcheckbox',
+            'allinone',
+            '',
+            get_string('allinone', 'quiz_essaydownload')
+        );
+        $mform->addHelpButton('allinone', 'allinone', 'quiz_essaydownload');
+        $mform->disabledIf('allinone', 'groupby', 'neq', 'byattempt');
+        $mform->disabledIf('allinone', 'flatarchive');
+        $mform->disabledIf('allinone', 'fileformat', 'neq', 'pdf');
+
+        $mform->addElement(
             'select',
             'nameordering',
             get_string('nameordering', 'quiz_essaydownload'),

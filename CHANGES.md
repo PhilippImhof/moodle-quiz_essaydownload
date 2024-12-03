@@ -1,5 +1,14 @@
 # Changelog
 
+### 1.5.0 (2024-12-03)
+
+- improvement: store export settings in user preferences
+- improvement: allow grouping all responses of an attempt in one PDF
+- bugfix: fixed bad page breaking when footer is enabled
+- bugfix: page format US Letter now working properly
+- internal: update CI for upcoming Moodle version
+
+
 ### 1.4.0 (2024-11-03)
 
 - improvement: add option for flatter folder hierarchy in archive

@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.6.0 (2024-12-10)
+
+- improvement: for quizzes that allow multiple attempts, add option to export only first/last/best attempt
+
 ### 1.5.0 (2024-12-03)
 
 - improvement: store export settings in user preferences

@@ -242,17 +242,26 @@ final class report_test extends \advanced_testcase {
         }
     }
 
-    public function provide_grademethods(): array {
-        return [
-            ['firstattempt', QUIZ_GRADEHIGHEST],
-            ['', QUIZ_GRADEAVERAGE],
-            ['firstattempt', QUIZ_ATTEMPTFIRST],
-            ['secondattempt', QUIZ_ATTEMPTLAST],
-        ];
+    /**
+     * Provide data to test filtering the first/last/best attempt.
+     *
+     * @return Generator
+     */
+    public static function provide_grademethods(): Generator {
+        yield ['firstattempt', QUIZ_GRADEHIGHEST];
+        yield ['', QUIZ_GRADEAVERAGE];
+        yield ['firstattempt', QUIZ_ATTEMPTFIRST];
+        yield ['secondattempt', QUIZ_ATTEMPTLAST];
     }
 
     /**
+     * Test filtering of the first/last/best attempt.
+     *
      * @dataProvider provide_grademethods
+     *
+     * @param string $expectedattempt which attempt should be fetched
+     * @param string $grademethod quiz grading method, e.g. highest grade, first attempt
+     * @return void
      */
     public function test_get_best_attempt($expectedattempt, $grademethod): void {
         $this->resetAfterTest();

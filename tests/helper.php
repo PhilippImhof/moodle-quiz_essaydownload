@@ -84,7 +84,7 @@ class quiz_essaydownload_test_helper {
             'questionsperpage' => 0,
             'grade' => 100.0,
             'sumgrades' => 2,
-            'grademethod' => $grademethod
+            'grademethod' => $grademethod,
         ]);
     }
 

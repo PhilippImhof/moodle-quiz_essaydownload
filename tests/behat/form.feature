@@ -32,7 +32,37 @@ Feature: Validation and display of the form
     And quiz "Quiz 1" contains the following questions:
       | question | page | maxmark |
       | Q1       | 1    | 1.0     |
+    And quiz "Quiz 2" contains the following questions:
+      | question | page | maxmark |
+      | Q1       | 1    | 1.0     |
+    And quiz "Quiz 3" contains the following questions:
+      | question | page | maxmark |
+      | Q1       | 1    | 1.0     |
+    And quiz "Quiz 4" contains the following questions:
+      | question | page | maxmark |
+      | Q1       | 1    | 1.0     |
+    And quiz "Quiz 5" contains the following questions:
+      | question | page | maxmark |
+      | Q1       | 1    | 1.0     |
+    And quiz "Quiz 6" contains the following questions:
+      | question | page | maxmark |
+      | Q1       | 1    | 1.0     |
     And user "student1" has attempted "Quiz 1" with responses:
+      | slot | response                    |
+      | 1    | The first student's answer. |
+    And user "student1" has attempted "Quiz 2" with responses:
+      | slot | response                    |
+      | 1    | The first student's answer. |
+    And user "student1" has attempted "Quiz 3" with responses:
+      | slot | response                    |
+      | 1    | The first student's answer. |
+    And user "student1" has attempted "Quiz 4" with responses:
+      | slot | response                    |
+      | 1    | The first student's answer. |
+    And user "student1" has attempted "Quiz 5" with responses:
+      | slot | response                    |
+      | 1    | The first student's answer. |
+    And user "student1" has attempted "Quiz 6" with responses:
       | slot | response                    |
       | 1    | The first student's answer. |
 

@@ -76,6 +76,9 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     /** @var float line spacing for PDF export */
     public $linespacing = 1;
 
+    /** @var bool whether to include only (at most) one finished attempt per user according to grading method */
+    public $onlyone = false;
+
     /** @var int bottom margin for PDF export */
     public $marginbottom = 20;
 
@@ -135,6 +138,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $toform->includefooter = $this->includefooter;
         $toform->includestats = $this->includestats;
         $toform->linespacing = $this->linespacing;
+        $toform->onlyone = $this->onlyone;
         $toform->marginbottom = $this->marginbottom;
         $toform->marginleft = $this->marginleft;
         $toform->marginright = $this->marginright;
@@ -165,6 +169,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->includefooter = $fromform->includefooter;
         $this->includestats = $fromform->includestats;
         $this->linespacing = $fromform->linespacing ?? '';
+        $this->onlyone = $fromform->onlyone ?? '';
         $this->marginbottom = $fromform->marginbottom ?? '';
         $this->marginleft = $fromform->marginleft ?? '';
         $this->marginright = $fromform->marginright ?? '';
@@ -191,6 +196,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->includefooter = optional_param('includefooter', $this->includefooter, PARAM_BOOL);
         $this->includestats = optional_param('includestats', $this->includestats, PARAM_BOOL);
         $this->linespacing = optional_param('linespacing', $this->linespacing, PARAM_FLOAT);
+        $this->onlyone = optional_param('onlyone', $this->onlyone, PARAM_BOOL);
         $this->marginbottom = optional_param('marginbottom', $this->marginbottom, PARAM_INT);
         $this->marginleft = optional_param('marginleft', $this->marginleft, PARAM_INT);
         $this->marginright = optional_param('marginright', $this->marginright, PARAM_INT);
@@ -218,6 +224,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->includefooter = get_user_preferences('quiz_essaydownload_includefooter', $this->includefooter);
         $this->includestats = get_user_preferences('quiz_essaydownload_includestats', $this->includestats);
         $this->linespacing = get_user_preferences('quiz_essaydownload_linespacing', $this->linespacing);
+        $this->onlyone = get_user_preferences('quiz_essaydownload_onlyone', $this->onlyone);
         $this->marginbottom = get_user_preferences('quiz_essaydownload_marginbottom', $this->marginbottom);
         $this->marginleft = get_user_preferences('quiz_essaydownload_marginleft', $this->marginleft);
         $this->marginright = get_user_preferences('quiz_essaydownload_marginright', $this->marginright);
@@ -258,6 +265,12 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
             set_user_preference('quiz_essaydownload_margintop', $this->margintop);
             set_user_preference('quiz_essaydownload_pageformat', $this->pageformat);
             set_user_preference('quiz_essaydownload_source', $this->source);
+        }
+
+        // The user can only set the following option, if the quiz allows limitation to (at most) one
+        // attempt. If they cannot set the option, we should not update the user prefs.
+        if (quiz_report_can_filter_only_graded($this->quiz)) {
+            set_user_preference('quiz_essaydownload_onlyone', $this->onlyone);
         }
     }
 

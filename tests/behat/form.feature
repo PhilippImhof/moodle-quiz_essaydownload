@@ -19,13 +19,50 @@ Feature: Validation and display of the form
     And the following "activities" exist:
       | activity | name   | intro              | course | groupmode |
       | quiz     | Quiz 1 | Quiz 1 description | C1     | 1         |
+    And the following "activities" exist:
+      | activity | name   | intro   | course | attempts | grademethod |
+      | quiz     | Quiz 2 | Best    | C1     | 2        | 1           |
+      | quiz     | Quiz 3 | Average | C1     | 2        | 2           |
+      | quiz     | Quiz 4 | First   | C1     | 2        | 3           |
+      | quiz     | Quiz 5 | Last    | C1     | 2        | 4           |
+      | quiz     | Quiz 6 | First   | C1     | 1        | 4           |
     And the following "questions" exist:
       | questioncategory | qtype | name | questiontext   |
       | Test questions   | essay | Q1   | First question |
     And quiz "Quiz 1" contains the following questions:
       | question | page | maxmark |
       | Q1       | 1    | 1.0     |
+    And quiz "Quiz 2" contains the following questions:
+      | question | page | maxmark |
+      | Q1       | 1    | 1.0     |
+    And quiz "Quiz 3" contains the following questions:
+      | question | page | maxmark |
+      | Q1       | 1    | 1.0     |
+    And quiz "Quiz 4" contains the following questions:
+      | question | page | maxmark |
+      | Q1       | 1    | 1.0     |
+    And quiz "Quiz 5" contains the following questions:
+      | question | page | maxmark |
+      | Q1       | 1    | 1.0     |
+    And quiz "Quiz 6" contains the following questions:
+      | question | page | maxmark |
+      | Q1       | 1    | 1.0     |
     And user "student1" has attempted "Quiz 1" with responses:
+      | slot | response                    |
+      | 1    | The first student's answer. |
+    And user "student1" has attempted "Quiz 2" with responses:
+      | slot | response                    |
+      | 1    | The first student's answer. |
+    And user "student1" has attempted "Quiz 3" with responses:
+      | slot | response                    |
+      | 1    | The first student's answer. |
+    And user "student1" has attempted "Quiz 4" with responses:
+      | slot | response                    |
+      | 1    | The first student's answer. |
+    And user "student1" has attempted "Quiz 5" with responses:
+      | slot | response                    |
+      | 1    | The first student's answer. |
+    And user "student1" has attempted "Quiz 6" with responses:
       | slot | response                    |
       | 1    | The first student's answer. |
 
@@ -74,3 +111,15 @@ Feature: Validation and display of the form
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
     When I click on "flatarchive" "checkbox"
     Then the "allinone" "field" should be disabled
+
+  Scenario: Limitation to one attempt should only be available, if the quiz allows multiple attempts and is not set to average grading
+    When I am on the "Quiz 2" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    Then I should see "Export at most one attempt per user according to grading method: Highest grade"
+    When I am on the "Quiz 4" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    Then I should see "Export at most one attempt per user according to grading method: First attempt"
+    When I am on the "Quiz 5" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    Then I should see "Export at most one attempt per user according to grading method: Last attempt"
+    When I am on the "Quiz 3" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    Then I should not see "Export at most one attempt per user"
+    When I am on the "Quiz 6" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    Then I should not see "Export at most one attempt per user"

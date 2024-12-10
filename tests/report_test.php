@@ -242,6 +242,89 @@ final class report_test extends \advanced_testcase {
         }
     }
 
+    /**
+     * Provide data to test filtering the first/last/best attempt.
+     *
+     * @return Generator
+     */
+    public static function provide_grademethods(): Generator {
+        yield ['firstattempt', QUIZ_GRADEHIGHEST];
+        yield ['', QUIZ_GRADEAVERAGE];
+        yield ['firstattempt', QUIZ_ATTEMPTFIRST];
+        yield ['secondattempt', QUIZ_ATTEMPTLAST];
+    }
+
+    /**
+     * Test filtering of the first/last/best attempt.
+     *
+     * @dataProvider provide_grademethods
+     *
+     * @param string $expectedattempt which attempt should be fetched
+     * @param string $grademethod quiz grading method, e.g. highest grade, first attempt
+     * @return void
+     */
+    public function test_get_best_attempt($expectedattempt, $grademethod): void {
+        $this->resetAfterTest();
+
+        // Create a course and a quiz with an essay and a shortanswer (frog/toad) question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = quiz_essaydownload_test_helper::add_quiz_with_grademethod($course, $grademethod);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz);
+        $questioncategory = $questiongenerator->create_question_category();
+        $saquestion = $questiongenerator->create_question('shortanswer', null, ['category' => $questioncategory->id]);
+        quiz_add_quiz_question($saquestion->id, $quiz);
+
+        // Add one student and some attempts.
+        $student = \phpunit_util::get_data_generator()->create_user(['firstname' => 'John', 'lastname' => 'Doe']);
+        \phpunit_util::get_data_generator()->enrol_user($student->id, $course->id, 'student');
+
+        // Returned attempt will be an array [$quizobj, $quba, $attemptobj].
+        $firstattempt = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        $timenow = time();
+        $tosubmit = [
+            1 => ['answer' => 'foobar', 'answerformat' => FORMAT_HTML],
+            2 => ['answer' => 'frog', 'answerformat' => FORMAT_PLAIN],
+        ];
+        $firstattempt[2]->process_submitted_actions($timenow, false, $tosubmit);
+        $firstattempt[2]->process_finish($timenow, false);
+
+        $secondattempt = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student, 2);
+        $tosubmit = [
+            1 => ['answer' => 'foobar', 'answerformat' => FORMAT_HTML],
+            2 => ['answer' => 'wrong answer', 'answerformat' => FORMAT_PLAIN],
+        ];
+        $secondattempt[2]->process_submitted_actions($timenow + 10, false, $tosubmit);
+        $secondattempt[2]->process_finish($timenow, false);
+
+        // Init report and fetch the attemps.
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+
+        // If no filtering is set, we should get both attempts.
+        self::assertCount(2, $fetchedattempts);
+
+        // Use reflection to force text source to plain (i. e. summary).
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedoptions = $reflectedreport->getProperty('options');
+        $reflectedoptions->setAccessible(true);
+        $options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
+        $options->onlyone = true;
+        $reflectedoptions->setValue($report, $options);
+
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        if (empty($expectedattempt)) {
+            self::assertCount(2, $fetchedattempts);
+        } else {
+            self::assertCount(1, $fetchedattempts);
+            self::assertEquals(array_keys($fetchedattempts)[0], ${$expectedattempt}[2]->get_attemptid());
+        }
+    }
+
     public function test_get_attempts_and_names_without_groups(): void {
         $this->resetAfterTest();
 

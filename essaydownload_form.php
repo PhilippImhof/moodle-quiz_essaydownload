@@ -102,6 +102,17 @@ class quiz_essaydownload_form extends moodleform {
         $mform->disabledIf('allinone', 'flatarchive');
         $mform->disabledIf('allinone', 'fileformat', 'neq', 'pdf');
 
+        if (quiz_report_can_filter_only_graded($this->_customdata['quiz'])) {
+            $gradingmethod = quiz_get_grading_option_name($this->_customdata['quiz']->grademethod);
+            $mform->addElement(
+                'advcheckbox',
+                'onlyone',
+                get_string('limitattempts', 'quiz_essaydownload'),
+                get_string('onlyone', 'quiz_essaydownload', $gradingmethod)
+            );
+            $mform->addHelpButton('onlyone', 'onlyone', 'quiz_essaydownload');
+        }
+
         $mform->addElement(
             'select',
             'nameordering',

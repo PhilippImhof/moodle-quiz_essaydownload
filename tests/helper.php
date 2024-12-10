@@ -70,6 +70,25 @@ class quiz_essaydownload_test_helper {
     }
 
     /**
+     * Create a test quiz for the specified course, setting the grade method to a custom value.
+     *
+     * @param \stdClass $course
+     * @param int $grademethod
+     * @return  \stdClass
+     */
+    public static function add_quiz_with_grademethod(\stdClass $course, int $grademethod = QUIZ_GRADEHIGHEST): \stdClass {
+        $quizgenerator = \phpunit_util::get_data_generator()->get_plugin_generator('mod_quiz');
+
+        return $quizgenerator->create_instance([
+            'course' => $course->id,
+            'questionsperpage' => 0,
+            'grade' => 100.0,
+            'sumgrades' => 2,
+            'grademethod' => $grademethod
+        ]);
+    }
+
+    /**
      * Helper method to add an essay question in quiz.
      *
      * @param component_generator_base $questiongenerator

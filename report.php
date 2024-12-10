@@ -235,6 +235,14 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $joins->wheres = '1 = 1';
         }
 
+        // If the user wants to limit the attempts to only the first/last/best attempt per user, we
+        // add a condition to the query. For simple inclusion into the query, we add a dummy clause
+        // in case the option is not active.
+        $filteroneattempt = quiz_report_qm_filter_select($this->quiz, 'a');
+        if (empty($filteroneattempt) || !$this->options->onlyone) {
+            $filteroneattempt = '1 = 1';
+        }
+
         $sql = "SELECT DISTINCT a.id attemptid, a.timefinish, u.firstname, u.lastname
                            FROM {quiz_attempts} a
                       LEFT JOIN {user} u ON a.userid = u.id
@@ -243,6 +251,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                                 AND a.preview = 0
                                 AND a.state = 'finished'
                                 AND $joins->wheres
+                                AND $filteroneattempt
                        ORDER BY attemptid";
 
         $results = $DB->get_records_sql($sql, ['quizid' => $this->quiz->id] + $joins->params);

@@ -343,11 +343,17 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                     $formattingoptions
                 );
 
-                $questionhtml = format_text(
-                    $questiondefinition->questiontext,
-                    $questiondefinition->questiontextformat,
-                    $formattingoptions
+                // The question text might contain images with a @@PLUGINFILE@@ URL, so we must run it through
+                // the attempt's rewrite_pluginfile_urls() function first. Afterwards, we run it through the HTML
+                // formatter, as with the response text.
+                $questiontext = $qa->rewrite_pluginfile_urls(
+                    $questiondefinition->questiontext, 'question', 'questiontext', $questiondefinition->id
                 );
+                $questionhtml = format_text($questiontext, $questiondefinition->questiontextformat, $formattingoptions);
+
+                // As a last step, we must make sure that possible links to images are changed, because we do not need
+                // the external URL (for display in a browser), but rather the path to the file on the server.
+                $questionhtml = $this->replace_image_paths_in_questiontext($questionhtml);
 
                 $details[$questionfolder]['responsetext'] = $responsehtml;
                 $details[$questionfolder]['questiontext'] = $questionhtml;
@@ -365,6 +371,76 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $details[$questionfolder]['attachments'] = $qa->get_last_qt_files('attachments', $quba->get_owning_context()->id);
         }
         return $details;
+    }
+
+    /**
+     * When embedding images in the question text, they will be referenced by their public URL, which
+     * is suitable for displaying the question in a browser. However, when embedding the images in a
+     * PDF with TCPDF, this will not work. This function will translate the public URL to local file
+     * paths.
+     *
+     * @param string $questiontext the question text possibly containing images
+     * @return string
+     */
+    protected function replace_image_paths_in_questiontext(string $questiontext): string {
+        global $CFG;
+
+        // The wwwroot might start with http or https. We substitute this by the regex *pattern*
+        // https? in order for our regex to match both protocols.
+        $wwwroot = preg_replace('/^https?/', 'https?', $CFG->wwwroot);
+
+        // The relevant paths come from question_rewrite_question_urls() and will all have the form
+        // <context>/question/questiontext/<usage_id>/<slot>/<question_id>/<filename>, with 'question'
+        // being the component and 'questiontext' the filearea.
+        $pattern = '<img.+src="' . $wwwroot;
+        $pattern .= '/pluginfile.php/(?P<context>[0-9]+)/question/questiontext';
+        $pattern .= '/(?P<usage>[0-9]+)/(?<slot>[0-9]+)/(?<questionid>[0-9]+)';
+        $pattern .= '/(?<filename>[^\"]+)';
+
+        // Find all relevant paths and store their components in an array.
+        $webpaths = [];
+        preg_match_all("#$pattern#", $questiontext, $webpaths, PREG_SET_ORDER);
+
+        // Iterate over all matches, get the local path and substitute the src attribute accordingly.
+        $fs = get_file_storage();
+        foreach ($webpaths as $webpath) {
+            $file = $fs->get_file(
+                $webpath['context'], 'question', 'questiontext', $webpath['questionid'], '', $webpath['filename']
+            );
+
+            $localpath = $fs->get_file_system()->get_local_path_from_storedfile($file);
+
+            // Test whether the file is readable or not. If there was an error somewhere, we'd rather know now.
+            // In this case, we replace the entire <img> tag by a placeholder containing the filename.
+            if (!is_readable($localpath)) {
+                $questiontext = preg_replace("#{$pattern}[^>]*>#", "[{$webpath['filename']}]", $questiontext);
+                continue;
+            }
+
+            // TCPDF will "correct" the absolute path and prepend the server's document root. However, in some cases
+            // that will break things, because the server root might be e. g. /var/www, but the absolute path for our
+            // Moodle installation could be in /data/moodledata/files/... We try to anticipate that change by adding
+            // the appropriate number of ..'s to our path. TCPDF's path rewriting only happens, if the document root is
+            // set, is not just / and does not start with our file path, so we use their checks to know whether we must
+            // intervene or not.
+            if (!empty($_SERVER['DOCUMENT_ROOT']) && ($_SERVER['DOCUMENT_ROOT'] != '/')) {
+                $findroot = strpos($localpath, $_SERVER['DOCUMENT_ROOT']);
+                if (($findroot === false) || ($findroot > 1)) {
+                    $documentroot = $_SERVER['DOCUMENT_ROOT'];
+                    if (substr($documentroot, -1) == DIRECTORY_SEPARATOR) {
+                        $documentroot = substr($documentroot, 0, -1);
+                    }
+                    $levels = count(explode(DIRECTORY_SEPARATOR, $documentroot)) - 1;
+                    for ($i = 0; $i < $levels; $i++) {
+                        $localpath = '/..' . $localpath;
+                    }
+                }
+            }
+
+            $questiontext = preg_replace("#$pattern#", '<img src="' . $localpath, $questiontext);
+        }
+
+        return $questiontext;
     }
 
     /**

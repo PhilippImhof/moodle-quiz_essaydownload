@@ -330,19 +330,27 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             // (because it has been filtered before) and disable filtering. Also, we do not put <div> tags
             // around it, as that is done anyway during generation of the PDF.
             $qa = $quba->get_question_attempt($slot);
+            $formattingoptions = [
+                'trusted' => true,
+                'filter' => false,
+                'para' => false,
+            ];
+            // If the source is HTML, we will do that for the response. Otherwise, we might have to convert the summary
+            // to HTML, depending on the desired output format.
             if ($this->options->source === 'html') {
-                $formattingoptions = [
-                    'trusted' => true,
-                    'filter' => false,
-                    'para' => false,
-                ];
-
                 $responsehtml = format_text(
                     strval($qa->get_last_qt_var('answer', '')),
                     $qa->get_last_qt_var('answerformat', FORMAT_PLAIN),
                     $formattingoptions
                 );
+                $details[$questionfolder]['responsetext'] = $responsehtml;
+            } else if ($this->options->fileformat === 'pdf') {
+                $details[$questionfolder]['responsetext'] = format_text($details[$questionfolder]['responsetext'], FORMAT_PLAIN);
+            }
 
+            // For the question text, however, we also make sure that the user did not override the source
+            // by using the 'forceqtsummary' option.
+            if ($this->options->source === 'html' && !$this->options->forceqtsummary) {
                 // The question text might contain images with a @@PLUGINFILE@@ URL, so we must run it through
                 // the attempt's rewrite_pluginfile_urls() function first. Afterwards, we run it through the HTML
                 // formatter, as with the response text.
@@ -355,16 +363,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 // the external URL (for display in a browser), but rather the path to the file on the server.
                 $questionhtml = $this->replace_image_paths_in_questiontext($questionhtml);
 
-                $details[$questionfolder]['responsetext'] = $responsehtml;
                 $details[$questionfolder]['questiontext'] = $questionhtml;
-            } else {
-                // If the user did not choose formatted HTML as their source, but wants PDF output, we should now
-                // call format_text() to convert the plain text summaries into HTML, namely for the linebreaks.
-                if ($this->options->fileformat === 'pdf') {
-                    foreach (['questiontext', 'responsetext'] as $text) {
-                        $details[$questionfolder][$text] = format_text($details[$questionfolder][$text], FORMAT_PLAIN);
-                    }
-                }
+            } else if ($this->options->fileformat === 'pdf') {
+                $details[$questionfolder]['questiontext'] = format_text($details[$questionfolder]['questiontext'], FORMAT_PLAIN);
             }
 
             // Finally, fetch attachments, if there are.
@@ -408,7 +409,13 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $webpath['context'], 'question', 'questiontext', $webpath['questionid'], '', $webpath['filename']
             );
 
-            $localpath = $fs->get_file_system()->get_local_path_from_storedfile($file);
+            // Fetching the local path could fail in some cases. We don't want an error to be thrown,
+            // instead we just set the path to the empty string, so the problem is detected in the next step.
+            try {
+                $localpath = $fs->get_file_system()->get_local_path_from_storedfile($file);
+            } catch (TypeError $e) {
+                $localpath = '';
+            }
 
             // Test whether the file is readable or not. If there was an error somewhere, we'd rather know now.
             // In this case, we replace the entire <img> tag by a placeholder containing the filename.

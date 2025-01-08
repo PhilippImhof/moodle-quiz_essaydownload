@@ -20,6 +20,7 @@ use quiz_essaydownload_options;
 use quiz_essaydownload_report;
 
 use Generator;
+use Throwable;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -1048,6 +1049,62 @@ final class report_test extends \advanced_testcase {
         }
     }
 
+    public function test_pdf_from_html_when_questiontext_is_forced_summary(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz, [
+            'name' => 'My Question Title / Test',
+            'questiontext' => ['text' => '<p>Go write <strong>your</strong> stuff!</p>', 'format' => FORMAT_HTML],
+        ]);
+
+        // Add a student and start an attempt.
+        $student = $generator->create_user();
+        $generator->enrol_user($student->id, $course->id, 'student');
+        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+
+        // Submit a response and finish the attempt.
+        $timenow = time();
+        $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
+        $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
+        $attemptobj->process_finish($timenow, false);
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Use reflection to force options.
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedoptions = $reflectedreport->getProperty('options');
+        $reflectedoptions->setAccessible(true);
+        $options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
+        $options->forceqtsummary = true;
+        $reflectedoptions->setValue($report, $options);
+
+        // Fetch the attemp using the report's API.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        self::assertCount(1, $fetchedattempts);
+
+        // Fetch the details.
+        $details = $report->get_details_for_attempt(array_keys($fetchedattempts)[0]);
+
+        // We expect the result to be an array with one element. The data should match the
+        // second response.
+        self::assertCount(1, $details);
+        foreach ($details as $label => $detail) {
+            self::assertEquals('Question_1_-_My_Question_Title__Test', $label);
+            self::assertEquals('Go write YOUR stuff!<br />', trim($detail['questiontext']));
+            self::assertStringStartsWith('<p>Here <strong>we</strong> go.</p>', $detail['responsetext']);
+            self::assertCount(0, $detail['attachments']);
+        }
+    }
+
     public function test_txt_when_input_is_html(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -1172,4 +1229,89 @@ final class report_test extends \advanced_testcase {
         );
     }
 
+    public function test_image_in_questiontext(): void {
+        global $CFG;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        $cat = $questiongenerator->create_question_category();
+        $question = $questiongenerator->create_question('essay', null, [
+            'category' => $cat->id,
+            'name' => 'My Question Title / Test',
+            'questiontext' => ['text' => '<p><img src="@@PLUGINFILE@@/image.png"</p>', 'format' => FORMAT_HTML],
+        ]);
+        quiz_add_quiz_question($question->id, $quiz);
+
+        // Prepare image.
+        $fs = get_file_storage();
+        $fileinfo = array(
+            'contextid' => $cat->contextid,
+            'component' => 'question',
+            'filearea' => 'questiontext',
+            'itemid' => $question->id,
+            'filepath' => '/',
+            'filename' => 'image.png'
+        );
+        $file = $fs->create_file_from_pathname($fileinfo, $CFG->dirroot . '/mod/quiz/report/essaydownload/tests/fixtures/image.png');
+
+        // Add a student submit an attempt.
+        $student = $generator->create_user();
+        $generator->enrol_user($student->id, $course->id, 'student');
+        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        $timenow = time();
+        $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
+        $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
+        $attemptobj->process_finish($timenow, false);
+
+        // Initialize report.
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Fetch the attempt and details using the report's API.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        $details = $report->get_details_for_attempt(array_keys($fetchedattempts)[0]);
+        self::assertCount(1, $details);
+        $questiontext = reset($details)['questiontext'];
+
+        // Try to create a PDF from the question text.
+        $e = null;
+        try {
+            $doc = new customTCPDF('P', 'mm', 'A4');
+            $doc->AddPage();
+            $doc->writeHTML($questiontext);
+            $pdfoutput = $doc->Output('', 'S');
+        } catch (Throwable $e) {
+            $pdfoutput = '';
+        }
+        // There should be no error and the PDF should be larger than the image file itself.
+        self::assertNull($e);
+        $pdfsize = strlen($pdfoutput);
+        self::assertGreaterThan($file->get_filesize(), $pdfsize);
+
+        // Now, let's physically remove the file from the data directory. Normally, this is a very bad thing,
+        // because it leads to inconsistencies. But in this case, we want to see what happens, when things break.
+        // Also, we are at the end of the test, so a reset is going to happen just after this.
+        $localpath = $fs->get_file_system()->get_local_path_from_storedfile($file);
+        unlink($localpath);
+
+        // Trying to generate a PDF again. There should be no error, but the image should be replaced by
+        // [image.png], so the file size must be smaller.
+        try {
+            $doc = new customTCPDF('P', 'mm', 'A4');
+            $doc->AddPage();
+            $doc->writeHTML($questiontext);
+            $pdfoutput = $doc->Output('', 'S');
+        } catch (\Throwable $e) {
+            $pdfoutput = '';
+        }
+        self::assertNull($e);
+        self::assertLessThan($pdfsize, 0.8 * strlen($pdfoutput));
+    }
 }

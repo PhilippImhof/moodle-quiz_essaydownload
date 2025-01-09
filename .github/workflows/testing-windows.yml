@@ -43,9 +43,9 @@ jobs:
 
       - name: Creating DB pgsql
         run: |
-            $env:PGBIN\createdb --owner=test test
+            & $env:PGBIN\createdb --owner=test test
             $env:PGPASSWORD = 'test'
-            $env:PGBIN\psql --username=test --host=localhost --list test
+            & $env:PGBIN\psql --username=test --host=localhost --list test
 
       - name: Initialise moodle-plugin-ci
         run: |

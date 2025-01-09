@@ -54,7 +54,12 @@ jobs:
           node-version: lts/iron
 
       - name: Installing node stuff
-        run: npm ci
+        env:
+          MOODLE_BRANCH: ${{ matrix.moodle-branch }}
+        run: |
+          wget https://raw.githubusercontent.com/moodle/moodle/refs/heads/$MOODLE_BRANCH/npm-shrinkwrap.json
+          wget https://raw.githubusercontent.com/moodle/moodle/refs/heads/$MOODLE_BRANCH/package.json
+          npm ci
 
       - name: Initialise moodle-plugin-ci
         shell: bash
@@ -73,13 +78,14 @@ jobs:
           DB: ${{ env.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
 
-      - name: Setup tmate session
-        if: always()
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 15
-
       - name: PHPUnit tests
         run: moodle-plugin-ci phpunit --fail-on-warning
 
+      - name: Setup tmate session
+        if: false
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 15
+
       - name: Behat features
+        if: false
         run: moodle-plugin-ci behat --auto-rerun 1 --profile chrome

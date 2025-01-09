@@ -32,6 +32,13 @@ jobs:
         with:
           node-version: lts/iron
 
+      - name: Installing node stuff
+        shell: bash
+        run: |
+          curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/npm-shrinkwrap.json
+          curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/package.json
+          npm ci
+
       - name: Setup PHP ${{ env.php }}
         uses: shivammathur/setup-php@v2
         with:
@@ -53,14 +60,6 @@ jobs:
           composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
           echo $(cd ci/bin; pwd) >> $GITHUB_PATH
           echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
-          echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
-
-      - name: Installing node stuff
-        shell: bash
-        run: |
-          curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/npm-shrinkwrap.json
-          curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/package.json
-          npm ci
 
       - name: Install moodle-plugin-ci
         shell: bash
@@ -75,7 +74,7 @@ jobs:
         run: moodle-plugin-ci phpunit --fail-on-warning
 
       - name: Setup tmate session
-        if: always()
+        if: false
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 20
 

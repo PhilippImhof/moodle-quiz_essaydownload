@@ -40,6 +40,7 @@ jobs:
             Set-Service -InputObject $pgService -Status running -StartupType automatic
             Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
             & $env:PGBIN\psql --command="CREATE USER test PASSWORD 'test'" --command="\du"
+            echo $PGBIN >> $GITHUB_PATH
 
       - name: Creating DB pgsql
         run: |

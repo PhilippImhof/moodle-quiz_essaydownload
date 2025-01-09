@@ -43,6 +43,7 @@ jobs:
             & $env:PGBIN\psql --command="CREATE USER test PASSWORD 'test'" --command="\du"
 
       - name: Creating DB pgsql
+        if: false
         run: |
             & $env:PGBIN\createdb --owner=test test
             $env:PGPASSWORD = 'test'
@@ -54,12 +55,13 @@ jobs:
           node-version: lts/iron
 
       - name: Installing node stuff
-        env:
-          MOODLE_BRANCH: ${{ matrix.moodle-branch }}
+        shell: bash
         run: |
           wget https://raw.githubusercontent.com/moodle/moodle/refs/heads/$MOODLE_BRANCH/npm-shrinkwrap.json
           wget https://raw.githubusercontent.com/moodle/moodle/refs/heads/$MOODLE_BRANCH/package.json
           npm ci
+        env:
+          MOODLE_BRANCH: ${{ matrix.moodle-branch }}
 
       - name: Initialise moodle-plugin-ci
         shell: bash

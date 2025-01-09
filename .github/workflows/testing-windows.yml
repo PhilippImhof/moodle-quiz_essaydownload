@@ -84,7 +84,7 @@ jobs:
         run: moodle-plugin-ci phpunit --fail-on-warning
 
       - name: Setup tmate session
-        if: false
+        if: always()
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 15
 

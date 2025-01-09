@@ -33,6 +33,7 @@ jobs:
           php-version: ${{ env.php }}
           ini-values: max_input_vars=5000
           coverage: none
+          extensions: exif, fileinfo, gd, intl, pgsql, zip
 
       - name: Setting up DB pgsql
         run: |
@@ -55,13 +56,13 @@ jobs:
           echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
           echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 10
-
       - name: Add PostgreSQL to path
         run: |
-          export PATH=$PATH:'/c/Program Files/PosotgreSQL/14/bin'
+          export PATH=${PATH}:'/c/Program Files/PostgreSQL/14/bin'
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 15
 
       - name: Install moodle-plugin-ci
         run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1

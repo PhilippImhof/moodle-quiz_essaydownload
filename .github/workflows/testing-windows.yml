@@ -47,6 +47,9 @@ jobs:
             $env:PGPASSWORD = 'test'
             & $env:PGBIN\psql --username=test --host=localhost --list test
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
       - name: Initialise moodle-plugin-ci
         run: |
           composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
@@ -66,5 +69,4 @@ jobs:
         run: moodle-plugin-ci phpunit --fail-on-warning
 
       - name: Behat features
-        if: ${{ !cancelled() }}
         run: moodle-plugin-ci behat --auto-rerun 1 --profile chrome

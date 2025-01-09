@@ -64,7 +64,7 @@ jobs:
       - name: Install moodle-plugin-ci
         shell: bash
         run: |
-          export PATH=$PATH:$(echo $PGBIN | s/C:/\\/c/ | tr \\ /)
+          export PATH=$PATH:$(echo $PGBIN | sed s/C:/\\/c/ | tr \\\\ /)
           moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1 --db-user=$PGUSER --db-pass=$PGPASSWORD
         env:
           DB: ${{ env.database }}

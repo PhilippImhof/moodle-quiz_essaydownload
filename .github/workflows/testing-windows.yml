@@ -50,6 +50,11 @@ jobs:
 
       - name: Configuring node & npm
         uses: actions/setup-node@v4
+        with:
+          node-version: lts/iron
+
+      - name: Installing node stuff
+        run: npm ci
 
       - name: Initialise moodle-plugin-ci
         shell: bash

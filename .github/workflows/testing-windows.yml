@@ -64,7 +64,7 @@ jobs:
       - name: Install moodle-plugin-ci
         shell: bash
         run: |
-          export PATH=$PATH:'/c/Program Files/PostgreSQL/14/bin'
+          export PATH=$PATH:$(echo $PGBIN | s/C:/\\/c/ | tr \\ /)
           moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1 --db-user=$PGUSER --db-pass=$PGPASSWORD
         env:
           DB: ${{ env.database }}
@@ -74,11 +74,11 @@ jobs:
         shell: bash
         run: moodle-plugin-ci phpunit --fail-on-warning
 
-      - name: Setup tmate session
+      - name: Setup tmate session (disabled)
         if: false
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 20
 
-      - name: Behat features
+      - name: Behat features (disabled)
         if: false
         run: moodle-plugin-ci behat --auto-rerun 1 --profile chrome

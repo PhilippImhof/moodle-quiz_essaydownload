@@ -48,6 +48,11 @@ jobs:
             $env:PGPASSWORD = 'test'
             & $env:PGBIN\psql --username=test --host=localhost --list test
 
+      - name: Configuring node & npm
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Initialise moodle-plugin-ci
         shell: bash
         run: |
@@ -55,10 +60,6 @@ jobs:
           echo $(cd ci/bin; pwd) >> $GITHUB_PATH
           echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
           echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 15
 
       - name: Install moodle-plugin-ci
         shell: bash
@@ -68,7 +69,10 @@ jobs:
         env:
           DB: ${{ env.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
-          MOODLE_APP: false
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 15
 
       - name: PHPUnit tests
         run: moodle-plugin-ci phpunit --fail-on-warning

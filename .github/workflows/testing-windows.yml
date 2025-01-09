@@ -56,16 +56,15 @@ jobs:
           echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
           echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
 
-      - name: Add PostgreSQL to path
-        run: |
-          echo "/c/Program Files/PostgreSQL/14/bin" >> $GITHUB_PATH
-
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 15
 
       - name: Install moodle-plugin-ci
-        run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
+        shell: bash
+        run: |
+          export PATH=$PATH:'/c/Program Files/PostgreSQL/14/bin'
+          moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
         env:
           DB: ${{ env.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}

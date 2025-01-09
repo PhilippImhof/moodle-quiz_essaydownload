@@ -40,7 +40,6 @@ jobs:
             Set-Service -InputObject $pgService -Status running -StartupType automatic
             Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
             & $env:PGBIN\psql --command="CREATE USER test PASSWORD 'test'" --command="\du"
-            echo $PGBIN >> $GITHUB_PATH
 
       - name: Creating DB pgsql
         run: |
@@ -59,6 +58,10 @@ jobs:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 10
+
+      - name: Add PostgreSQL to path
+        run: |
+          export PATH=$PATH:'/c/Program Files/PosotgreSQL/14/bin'
 
       - name: Install moodle-plugin-ci
         run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1

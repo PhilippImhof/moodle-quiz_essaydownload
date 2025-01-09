@@ -32,15 +32,6 @@ jobs:
         with:
           node-version: lts/iron
 
-      - name: Installing node stuff
-        shell: bash
-        run: |
-          curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/npm-shrinkwrap.json
-          curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/package.json
-          npm ci
-          mkdir $HOME/.nvm
-          curl -o $HOME/.nvm/nvm.sh https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh
-
       - name: Setup PHP ${{ env.php }}
         uses: shivammathur/setup-php@v2
         with:
@@ -63,6 +54,13 @@ jobs:
           echo $(cd ci/bin; pwd) >> $GITHUB_PATH
           echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
           echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
+
+      - name: Installing node stuff
+        shell: bash
+        run: |
+          curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/npm-shrinkwrap.json
+          curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/package.json
+          npm ci
 
       - name: Install moodle-plugin-ci
         shell: bash

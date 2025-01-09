@@ -45,7 +45,7 @@ jobs:
           php-version: ${{ env.php }}
           ini-values: max_input_vars=5000
           coverage: none
-          extensions: exif, fileinfo, gd, intl, pgsql, zip
+          extensions: exif, fileinfo, gd, intl, pgsql, sodium, zip
 
       - name: Setting up DB pgsql
         run: |
@@ -74,7 +74,7 @@ jobs:
         run: moodle-plugin-ci phpunit --fail-on-warning
 
       - name: Setup tmate session
-        if: false
+        if: always()
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 20
 

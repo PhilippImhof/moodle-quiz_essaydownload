@@ -73,6 +73,12 @@ jobs:
         shell: bash
         run: moodle-plugin-ci phpunit --fail-on-warning
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: Setup tmate session (disabled)
         if: always()
         uses: mxschmitt/action-tmate@v3

@@ -27,12 +27,12 @@ jobs:
         with:
           path: plugin
 
-      - name: Configuring node & npm
+      - name: Configure node & npm
         uses: actions/setup-node@v4
         with:
           node-version: lts/iron
 
-      - name: Installing node stuff
+      - name: Install node
         shell: bash
         run: |
           curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/npm-shrinkwrap.json
@@ -47,7 +47,7 @@ jobs:
           coverage: none
           extensions: exif, fileinfo, gd, intl, pgsql, sodium, zip
 
-      - name: Setting up DB pgsql
+      - name: Setup PostgreSQL
         run: |
             $pgService = Get-Service -Name postgresql*
             Set-Service -InputObject $pgService -Status running -StartupType automatic
@@ -59,11 +59,11 @@ jobs:
           composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
           echo $(cd ci/bin; pwd) >> $GITHUB_PATH
           echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
+          echo $(echo $PGBIN | sed s/C:/\\/c/ | tr \\\\ /) >> $GITHUB_PATH
 
       - name: Install moodle-plugin-ci
         shell: bash
         run: |
-          export PATH=$PATH:$(echo $PGBIN | sed s/C:/\\/c/ | tr \\\\ /)
           moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1 --db-user=$PGUSER --db-pass=$PGPASSWORD
         env:
           DB: ${{ env.database }}
@@ -72,6 +72,11 @@ jobs:
       - name: PHPUnit tests
         shell: bash
         run: moodle-plugin-ci phpunit --fail-on-warning
+
+      - name: Setup tmate session (disabled)
+        if: always()
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 20
 
       - name: Behat features (disabled)
         if: false

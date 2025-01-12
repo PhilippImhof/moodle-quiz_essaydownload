@@ -1,5 +1,10 @@
 # Changelog
 
+### 1.6.1 (2025-01-12)
+
+- bugfix: fix export of question text with embedded images
+- internal: add unit tests for Windows based servers
+
 ### 1.6.0 (2024-12-10)
 
 - improvement: for quizzes that allow multiple attempts, add option to export only first/last/best attempt

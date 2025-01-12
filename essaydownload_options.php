@@ -64,6 +64,9 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     /** @var int font size for PDF export */
     public $fontsize = 12;
 
+    /** @var bool whether to force use of summary for question text, even if source is set to HTML */
+    public $forceqtsummary = false;
+
     /** @var string how to organise the sub folders in the archive (by question or by attempt) */
     public $groupby = 'byattempt';
 
@@ -134,6 +137,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $toform->flatarchive = $this->flatarchive;
         $toform->font = $this->font;
         $toform->fontsize = $this->fontsize;
+        $toform->forceqtsummary = $this->forceqtsummary;
         $toform->groupby = $this->groupby;
         $toform->includefooter = $this->includefooter;
         $toform->includestats = $this->includestats;
@@ -165,6 +169,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->flatarchive = $fromform->flatarchive;
         $this->font = $fromform->font ?? '';
         $this->fontsize = $fromform->fontsize ?? '';
+        $this->forceqtsummary = $fromform->forceqtsummary;
         $this->groupby = $fromform->groupby;
         $this->includefooter = $fromform->includefooter;
         $this->includestats = $fromform->includestats;
@@ -192,6 +197,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->flatarchive = optional_param('flatarchive', $this->flatarchive, PARAM_BOOL);
         $this->font = optional_param('font', $this->font, PARAM_ALPHA);
         $this->fontsize = optional_param('fontsize', $this->fontsize, PARAM_INT);
+        $this->forceqtsummary = optional_param('forceqtsummary', $this->forceqtsummary, PARAM_BOOL);
         $this->groupby = optional_param('groupby', $this->groupby, PARAM_ALPHA);
         $this->includefooter = optional_param('includefooter', $this->includefooter, PARAM_BOOL);
         $this->includestats = optional_param('includestats', $this->includestats, PARAM_BOOL);

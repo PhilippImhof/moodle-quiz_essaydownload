@@ -330,41 +330,124 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             // (because it has been filtered before) and disable filtering. Also, we do not put <div> tags
             // around it, as that is done anyway during generation of the PDF.
             $qa = $quba->get_question_attempt($slot);
+            $formattingoptions = [
+                'trusted' => true,
+                'filter' => false,
+                'para' => false,
+            ];
+            // If the source is HTML, we will do that for the response. Otherwise, we might have to convert the summary
+            // to HTML, depending on the desired output format.
             if ($this->options->source === 'html') {
-                $formattingoptions = [
-                    'trusted' => true,
-                    'filter' => false,
-                    'para' => false,
-                ];
-
                 $responsehtml = format_text(
                     strval($qa->get_last_qt_var('answer', '')),
                     $qa->get_last_qt_var('answerformat', FORMAT_PLAIN),
                     $formattingoptions
                 );
-
-                $questionhtml = format_text(
-                    $questiondefinition->questiontext,
-                    $questiondefinition->questiontextformat,
-                    $formattingoptions
-                );
-
                 $details[$questionfolder]['responsetext'] = $responsehtml;
+            } else if ($this->options->fileformat === 'pdf') {
+                $details[$questionfolder]['responsetext'] = format_text($details[$questionfolder]['responsetext'], FORMAT_PLAIN);
+            }
+
+            // For the question text, however, we also make sure that the user did not override the source
+            // by using the 'forceqtsummary' option.
+            if ($this->options->source === 'html' && !$this->options->forceqtsummary) {
+                // The question text might contain images with a @@PLUGINFILE@@ URL, so we must run it through
+                // the attempt's rewrite_pluginfile_urls() function first. Afterwards, we run it through the HTML
+                // formatter, as with the response text.
+                $questiontext = $qa->rewrite_pluginfile_urls(
+                    $questiondefinition->questiontext, 'question', 'questiontext', $questiondefinition->id
+                );
+                $questionhtml = format_text($questiontext, $questiondefinition->questiontextformat, $formattingoptions);
+
+                // As a last step, we must make sure that possible links to images are changed, because we do not need
+                // the external URL (for display in a browser), but rather the path to the file on the server.
+                $questionhtml = $this->replace_image_paths_in_questiontext($questionhtml);
+
                 $details[$questionfolder]['questiontext'] = $questionhtml;
-            } else {
-                // If the user did not choose formatted HTML as their source, but wants PDF output, we should now
-                // call format_text() to convert the plain text summaries into HTML, namely for the linebreaks.
-                if ($this->options->fileformat === 'pdf') {
-                    foreach (['questiontext', 'responsetext'] as $text) {
-                        $details[$questionfolder][$text] = format_text($details[$questionfolder][$text], FORMAT_PLAIN);
-                    }
-                }
+            } else if ($this->options->fileformat === 'pdf') {
+                $details[$questionfolder]['questiontext'] = format_text($details[$questionfolder]['questiontext'], FORMAT_PLAIN);
             }
 
             // Finally, fetch attachments, if there are.
             $details[$questionfolder]['attachments'] = $qa->get_last_qt_files('attachments', $quba->get_owning_context()->id);
         }
         return $details;
+    }
+
+    /**
+     * When embedding images in the question text, they will be referenced by their public URL, which
+     * is suitable for displaying the question in a browser. However, when embedding the images in a
+     * PDF with TCPDF, this will not work. This function will translate the public URL to local file
+     * paths.
+     *
+     * @param string $questiontext the question text possibly containing images
+     * @return string
+     */
+    protected function replace_image_paths_in_questiontext(string $questiontext): string {
+        global $CFG;
+
+        // The wwwroot might start with http or https. We substitute this by the regex *pattern*
+        // https? in order for our regex to match both protocols.
+        $wwwroot = preg_replace('/^https?/', 'https?', $CFG->wwwroot);
+
+        // The relevant paths come from question_rewrite_question_urls() and will all have the form
+        // <context>/question/questiontext/<usage_id>/<slot>/<question_id>/<filename>, with 'question'
+        // being the component and 'questiontext' the filearea.
+        $pattern = '<img.+src="' . $wwwroot;
+        $pattern .= '/pluginfile.php/(?P<context>[0-9]+)/question/questiontext';
+        $pattern .= '/(?P<usage>[0-9]+)/(?<slot>[0-9]+)/(?<questionid>[0-9]+)';
+        $pattern .= '/(?<filename>[^\"]+)';
+
+        // Find all relevant paths and store their components in an array.
+        $webpaths = [];
+        preg_match_all("#$pattern#", $questiontext, $webpaths, PREG_SET_ORDER);
+
+        // Iterate over all matches, get the local path and substitute the src attribute accordingly.
+        $fs = get_file_storage();
+        foreach ($webpaths as $webpath) {
+            $file = $fs->get_file(
+                $webpath['context'], 'question', 'questiontext', $webpath['questionid'], '', $webpath['filename']
+            );
+
+            // Fetching the local path could fail in some cases. We don't want an error to be thrown,
+            // instead we just set the path to the empty string, so the problem is detected in the next step.
+            try {
+                $localpath = $fs->get_file_system()->get_local_path_from_storedfile($file);
+            } catch (TypeError $e) {
+                $localpath = '';
+            }
+
+            // Test whether the file is readable or not. If there was an error somewhere, we'd rather know now.
+            // In this case, we replace the entire <img> tag by a placeholder containing the filename.
+            if (!is_readable($localpath)) {
+                $questiontext = preg_replace("#{$pattern}[^>]*>#", "[{$webpath['filename']}]", $questiontext);
+                continue;
+            }
+
+            // TCPDF will "correct" the absolute path and prepend the server's document root. However, in some cases
+            // that will break things, because the server root might be e. g. /var/www, but the absolute path for our
+            // Moodle installation could be in /data/moodledata/files/... We try to anticipate that change by adding
+            // the appropriate number of ..'s to our path. TCPDF's path rewriting only happens, if the document root is
+            // set, is not just / and does not start with our file path, so we use their checks to know whether we must
+            // intervene or not.
+            if (!empty($_SERVER['DOCUMENT_ROOT']) && ($_SERVER['DOCUMENT_ROOT'] != '/')) {
+                $findroot = strpos($localpath, $_SERVER['DOCUMENT_ROOT']);
+                if (($findroot === false) || ($findroot > 1)) {
+                    $documentroot = $_SERVER['DOCUMENT_ROOT'];
+                    if (substr($documentroot, -1) == DIRECTORY_SEPARATOR) {
+                        $documentroot = substr($documentroot, 0, -1);
+                    }
+                    $levels = count(explode(DIRECTORY_SEPARATOR, $documentroot)) - 1;
+                    for ($i = 0; $i < $levels; $i++) {
+                        $localpath = '/..' . $localpath;
+                    }
+                }
+            }
+
+            $questiontext = preg_replace("#$pattern#", '<img src="' . $localpath, $questiontext);
+        }
+
+        return $questiontext;
     }
 
     /**

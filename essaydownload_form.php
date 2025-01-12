@@ -181,6 +181,16 @@ class quiz_essaydownload_form extends moodleform {
         $mform->disabledIf('fixremfontsize', 'fileformat', 'neq', 'pdf');
         $mform->disabledIf('fixremfontsize', 'source', 'neq', 'html');
         $mform->addHelpButton('fixremfontsize', 'fixremfontsize', 'quiz_essaydownload');
+        $mform->addElement(
+            'advcheckbox',
+            'forceqtsummary',
+            '',
+            get_string('forceqtsummary', 'quiz_essaydownload')
+        );
+        $mform->disabledIf('forceqtsummary', 'fileformat', 'neq', 'pdf');
+        $mform->disabledIf('forceqtsummary', 'source', 'neq', 'html');
+        $mform->disabledIf('forceqtsummary', 'questiontext');
+        $mform->addHelpButton('forceqtsummary', 'forceqtsummary', 'quiz_essaydownload');
     }
 
     /**

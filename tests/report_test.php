@@ -21,7 +21,6 @@ use quiz_essaydownload_report;
 
 use Generator;
 use Throwable;
-use Throwable;
 
 defined('MOODLE_INTERNAL') || die();
 

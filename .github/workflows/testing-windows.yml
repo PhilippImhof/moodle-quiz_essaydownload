@@ -79,10 +79,42 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Install Apache and PHP
+        run: |
+          choco install apache-httpd -y
+          RefreshEnv
+          choco install php -y
+          RefreshEnv
+
+      - name: Configure Apache
+        run: |
+          $apacheConfig = "$env:ProgramFiles/Apache24/conf/httpd.conf"
+          $phpPath = "C:/tools/php"
+          # Add PHP module
+          Add-Content $apacheConfig `
+          "`n# PHP Configuration`n" + `
+          "LoadModule php_module $phpPath/php8apache2_4.dll`n" + `
+          "AddType application/x-httpd-php .php`n" + `
+          "PHPIniDir $phpPath"
+          # Set host name according to preset config value from moodle-plugin-ci
+          $content = Get-Content $apacheConfig -Raw
+          $content = $content -replace '(#ServerName www.example.com:80)', 'ServerName localhost:8000'
+          Set-Content $apacheConfig $content
+
+      - name: Start Apache Server
+        run: |
+          Start-Service Apache24
+          Get-Service Apache24
+
+      - name: Init behat
+        shell: bash
+        run: |
+          php moodle/admin/tool/behat/cli/init.php
+
       - name: Setup tmate session (disabled)
         if: always()
         uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 20
+        timeout-minutes: 30
 
       - name: Behat features (disabled)
         if: false

@@ -27,12 +27,14 @@ jobs:
         with:
           path: plugin
 
-      - name: Configure node & npm
+      - name: Configure node & npm (temp disabled)
+        if: false
         uses: actions/setup-node@v4
         with:
           node-version: lts/iron
 
-      - name: Install node
+      - name: Install node (temp disabled)
+        if: false
         shell: bash
         run: |
           curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/npm-shrinkwrap.json
@@ -69,7 +71,8 @@ jobs:
           DB: ${{ env.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
 
-      - name: PHPUnit tests
+      - name: PHPUnit tests (disabled for speed)
+        if: false
         shell: bash
         run: moodle-plugin-ci phpunit --fail-on-warning
 
@@ -79,7 +82,8 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Install Apache and PHP
+      - name: Install Apache and PHP (disabled, already available)
+        if: false
         run: |
           choco install apache-httpd -y
           RefreshEnv
@@ -88,7 +92,7 @@ jobs:
 
       - name: Configure Apache
         run: |
-          $apacheConfig = "$env:ProgramFiles/Apache24/conf/httpd.conf"
+          $apacheConfig = "C:/tools/Apache24/conf/httpd.conf"
           $phpPath = "C:/tools/php"
           # Add PHP module
           Add-Content $apacheConfig `

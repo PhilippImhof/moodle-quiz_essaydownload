@@ -1,4 +1,4 @@
-name: Automated testing for Windows
+name: Automated unit tests for Windows
 
 on: [push, pull_request]
 
@@ -8,7 +8,7 @@ env:
 
 jobs:
   test:
-    name: Automated testing for Windows
+    name: Automated unit tests for Windows
     runs-on: windows-2022
 
     strategy:
@@ -27,14 +27,12 @@ jobs:
         with:
           path: plugin
 
-      - name: Configure node & npm (temp disabled)
-        if: false
+      - name: Configure node & npm
         uses: actions/setup-node@v4
         with:
           node-version: lts/iron
 
-      - name: Install node (temp disabled)
-        if: false
+      - name: Install node
         shell: bash
         run: |
           curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/npm-shrinkwrap.json
@@ -61,65 +59,16 @@ jobs:
           composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
           echo $(cd ci/bin; pwd) >> $GITHUB_PATH
           echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
-          echo $(echo $PGBIN | sed s/C:/\\/c/ | tr \\\\ /) >> $GITHUB_PATH
 
       - name: Install moodle-plugin-ci
         shell: bash
         run: |
+          export PATH=$PATH:$(echo $PGBIN | sed s/C:/\\/c/ | tr \\\\ /)
           moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1 --db-user=$PGUSER --db-pass=$PGPASSWORD
         env:
           DB: ${{ env.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
 
-      - name: PHPUnit tests (disabled for speed)
-        if: false
+      - name: PHPUnit tests
         shell: bash
         run: moodle-plugin-ci phpunit --fail-on-warning
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Install Apache and PHP (disabled, already available)
-        if: false
-        run: |
-          choco install apache-httpd -y
-          RefreshEnv
-          choco install php -y
-          RefreshEnv
-
-      - name: Configure Apache
-        run: |
-          $apacheConfig = "C:/tools/Apache24/conf/httpd.conf"
-          $phpPath = "C:/tools/php"
-          # Add PHP module
-          Add-Content $apacheConfig `
-          "`n# PHP Configuration`n" + `
-          "LoadModule php_module $phpPath/php8apache2_4.dll`n" + `
-          "AddType application/x-httpd-php .php`n" + `
-          "PHPIniDir $phpPath"
-          # Set host name according to preset config value from moodle-plugin-ci
-          $content = Get-Content $apacheConfig -Raw
-          $content = $content -replace '(#ServerName www.example.com:80)', 'ServerName localhost:8000'
-          Set-Content $apacheConfig $content
-
-      - name: Start Apache Server
-        run: |
-          Start-Service Apache24
-          Get-Service Apache24
-
-      - name: Init behat
-        shell: bash
-        run: |
-          php moodle/admin/tool/behat/cli/init.php
-
-      - name: Setup tmate session (disabled)
-        if: always()
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 30
-
-      - name: Behat features (disabled)
-        if: false
-        run: moodle-plugin-ci behat --auto-rerun 1 --profile chrome

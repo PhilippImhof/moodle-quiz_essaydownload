@@ -1,0 +1,74 @@
+name: Automated unit tests for Windows
+
+on: [push, pull_request]
+
+env:
+    php: 8.1
+    database: pgsql
+
+jobs:
+  test:
+    name: Automated unit tests for Windows
+    runs-on: windows-2022
+
+    strategy:
+      fail-fast: false
+      matrix:
+        moodle-branch: ['MOODLE_401_STABLE', 'MOODLE_405_STABLE']
+
+    steps:
+      - name: Set git to use LF
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - name: Configure node & npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/iron
+
+      - name: Install node
+        shell: bash
+        run: |
+          curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/npm-shrinkwrap.json
+          curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/package.json
+          npm ci
+
+      - name: Setup PHP ${{ env.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.php }}
+          ini-values: max_input_vars=5000
+          coverage: none
+          extensions: exif, fileinfo, gd, intl, pgsql, sodium, zip
+
+      - name: Setup PostgreSQL
+        run: |
+            $pgService = Get-Service -Name postgresql*
+            Set-Service -InputObject $pgService -Status running -StartupType automatic
+            Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
+
+      - name: Initialise moodle-plugin-ci
+        shell: bash
+        run: |
+          composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
+          echo $(cd ci/bin; pwd) >> $GITHUB_PATH
+          echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
+
+      - name: Install moodle-plugin-ci
+        shell: bash
+        run: |
+          export PATH=$PATH:$(echo $PGBIN | sed s/C:/\\/c/ | tr \\\\ /)
+          moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1 --db-user=$PGUSER --db-pass=$PGPASSWORD
+        env:
+          DB: ${{ env.database }}
+          MOODLE_BRANCH: ${{ matrix.moodle-branch }}
+
+      - name: PHPUnit tests
+        shell: bash
+        run: moodle-plugin-ci phpunit --fail-on-warning

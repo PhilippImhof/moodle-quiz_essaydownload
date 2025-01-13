@@ -33,7 +33,6 @@ jobs:
           node-version: lts/iron
 
       - name: Install node
-        shell: bash
         run: |
           curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/npm-shrinkwrap.json
           curl -O -s https://raw.githubusercontent.com/moodle/moodle/refs/heads/${{ matrix.moodle-branch }}/package.json
@@ -98,6 +97,7 @@ jobs:
           $config = Get-Content $confFile -Raw
           $config = $config -replace 'Listen 80', 'Listen 8080'
           $config = $config -replace 'ServerName localhost:80', 'ServerName localhost:8080'
+          $config = $config -replace 'Require all denied', 'Require all granted'
           Set-Content $confFile $config
 
       - name: Start Apache Server

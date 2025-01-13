@@ -46,14 +46,18 @@ jobs:
           ini-values: max_input_vars=5000
           coverage: none
           extensions: exif, fileinfo, gd, intl, pgsql, sodium, zip
+        env:
+          phpts: ts
 
       - name: Setup PostgreSQL
+        if: false
         run: |
             $pgService = Get-Service -Name postgresql*
             Set-Service -InputObject $pgService -Status running -StartupType automatic
             Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
 
       - name: Initialise moodle-plugin-ci
+        if: false
         shell: bash
         run: |
           composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
@@ -62,6 +66,7 @@ jobs:
           echo $(echo $PGBIN | sed s/C:/\\/c/ | tr \\\\ /) >> $GITHUB_PATH
 
       - name: Install moodle-plugin-ci
+        if: false
         shell: bash
         run: |
           moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1 --db-user=$PGUSER --db-pass=$PGPASSWORD
@@ -75,17 +80,15 @@ jobs:
         run: moodle-plugin-ci phpunit --fail-on-warning
 
       - name: Setup Java
+        if: false
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Download and install Apache PHP module
+      - name: Setup Apache PHP module
         run: |
-          curl -L -o php.zip https://windows.php.net/downloads/releases/php-8.1.31-nts-Win32-vs16-x64.zip
-          $phpPath = "C:/php"
-          Expand-Archive php.zip -DestinationPath $phpPath
-          RefreshEnv
+          $phpPath = "C:/tools/php"
           $apacheConfig = "C:/tools/Apache24/conf/httpd.conf"
           # Add PHP module
           Add-Content $apacheConfig `

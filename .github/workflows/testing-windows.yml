@@ -50,14 +50,12 @@ jobs:
           phpts: ts
 
       - name: Setup PostgreSQL
-        if: false
         run: |
             $pgService = Get-Service -Name postgresql*
             Set-Service -InputObject $pgService -Status running -StartupType automatic
             Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
 
       - name: Initialise moodle-plugin-ci
-        if: false
         shell: bash
         run: |
           composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
@@ -66,7 +64,6 @@ jobs:
           echo $(echo $PGBIN | sed s/C:/\\/c/ | tr \\\\ /) >> $GITHUB_PATH
 
       - name: Install moodle-plugin-ci
-        if: false
         shell: bash
         run: |
           moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1 --db-user=$PGUSER --db-pass=$PGPASSWORD
@@ -80,22 +77,28 @@ jobs:
         run: moodle-plugin-ci phpunit --fail-on-warning
 
       - name: Setup Java
-        if: false
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Setup Apache PHP module
+      - name: Setup Apache
         run: |
           $phpPath = "C:/tools/php"
-          $apacheConfig = "C:/tools/Apache24/conf/httpd.conf"
+          $confFile = "C:/tools/Apache24/conf/httpd.conf"
           # Add PHP module
-          Add-Content $apacheConfig `
-          "`n# PHP Configuration`n" + `
-          "LoadModule php_module $phpPath/php8apache2_4.dll`n" + `
-          "AddType application/x-httpd-php .php`n" + `
-          "PHPIniDir $phpPath"
+          Add-Content $confFile @"
+          LoadModule php_module $phpPath/php8apache2_4.dll
+          AddType application/x-httpd-php .php
+          PHPIniDir $phpPath
+          # Overwrite DocumentRoot
+          DocumentRoot D:/a/moodle-quiz_essaydownload/moodle-quiz_essaydownload
+          "@
+          # Change Server Config
+          $config = Get-Content $confFile -Raw
+          $config = $config -replace 'Listen 80', 'Listen 8080'
+          $config = $config -replace 'ServerName localhost:80', 'ServerName localhost:8080'
+          Set-Content $confFile $config
 
       - name: Start Apache Server
         run: |

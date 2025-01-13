@@ -80,14 +80,17 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Configure Apache
+      - name: Download and install Apache PHP module
         run: |
+          curl -L -o php.zip https://windows.php.net/downloads/releases/php-8.1.31-nts-Win32-vs16-x64.zip
+          $phpPath = "C:/php"
+          Expand-Archive php.zip -DestinationPath $phpPath
+          RefreshEnv
           $apacheConfig = "C:/tools/Apache24/conf/httpd.conf"
-          $phpPath = "${{ env.PHP_PATH }}"
           # Add PHP module
           Add-Content $apacheConfig `
           "`n# PHP Configuration`n" + `
-          "LoadModule php_module $phpPath/php8.dll`n" + `
+          "LoadModule php_module $phpPath/php8apache2_4.dll`n" + `
           "AddType application/x-httpd-php .php`n" + `
           "PHPIniDir $phpPath"
 
@@ -102,7 +105,7 @@ jobs:
           php moodle/admin/tool/behat/cli/init.php
 
       - name: Setup tmate session (disabled)
-        if: false()
+        if: always()
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 30
 

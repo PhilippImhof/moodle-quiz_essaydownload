@@ -95,25 +95,30 @@ jobs:
           "@
           # Change Server Config
           $config = Get-Content $confFile -Raw
-          $config = $config -replace 'Listen 80', 'Listen 8080'
-          $config = $config -replace 'ServerName localhost:80', 'ServerName localhost:8080'
+          $config = $config -replace 'Listen 80', 'Listen 8000'
+          $config = $config -replace 'ServerName localhost:80', 'ServerName localhost:8000'
           $config = $config -replace 'Require all denied', 'Require all granted'
+          $config = $config -replace 'DirectoryIndex index.html', 'DirectoryIndex index.php index.html'
           Set-Content $confFile $config
 
       - name: Start Apache Server
         run: |
-          Start-Service Apache
-          Get-Service Apache
+          Set-Service apache -StartupType manual
+          Start-Service apache
+          Get-Service apache
 
       - name: Init behat
         shell: bash
         run: |
           php moodle/admin/tool/behat/cli/init.php
 
+      - name: Behat features (disabled)
+        shell: bash
+        run: |
+          ./moodle/vendor/bin/behat --config /d/a/moodle-quiz_essaydownload/moodle-quiz_essaydownload/moodledata/behat_moodledata/behatrun/behat/behat.yml  --profile firefox
+
       - name: Setup tmate session (disabled)
         if: always()
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 30
 
-      - name: Behat features (disabled)
-        run: moodle-plugin-ci behat --auto-rerun 1 --profile chrome

@@ -90,7 +90,7 @@ jobs:
           AddType application/x-httpd-php .php
           PHPIniDir $phpPath
           # Overwrite DocumentRoot
-          DocumentRoot D:/a/moodle-quiz_essaydownload/moodle-quiz_essaydownload/moodle
+          DocumentRoot $pwd/moodle
           "@
           # Change Server Config
           $config = Get-Content $confFile -Raw
@@ -118,7 +118,9 @@ jobs:
       - name: Behat features
         shell: bash
         run: |
-          ./moodle/vendor/bin/behat --config /d/a/moodle-quiz_essaydownload/moodle-quiz_essaydownload/moodledata/behat_moodledata/behatrun/behat/behat.yml  --profile firefox --tags quiz_essaydownload
+          ./moodle/vendor/bin/behat --config $(pwd)/moodledata/behat_moodledata/behatrun/behat/behat.yml  --profile firefox --tags ${PLUGINNAME:7}
+        env:
+          PLUGINNAME: ${{ github.event.repository.name }}
 
       - name: Setup tmate session (disabled)
         if: false

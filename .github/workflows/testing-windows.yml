@@ -122,8 +122,3 @@ jobs:
         env:
           PLUGINNAME: ${{ github.event.repository.name }}
 
-      - name: Setup tmate session (disabled)
-        if: false
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 30
-

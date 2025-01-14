@@ -102,8 +102,8 @@ jobs:
 
       - name: Start Apache Server
         run: |
-          Start-Service Apache24
-          Get-Service Apache24
+          Start-Service Apache
+          Get-Service Apache
 
       - name: Init behat
         shell: bash
@@ -116,5 +116,4 @@ jobs:
         timeout-minutes: 30
 
       - name: Behat features (disabled)
-        if: false
         run: moodle-plugin-ci behat --auto-rerun 1 --profile chrome

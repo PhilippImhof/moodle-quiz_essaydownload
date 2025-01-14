@@ -70,16 +70,15 @@ jobs:
           DB: ${{ env.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
 
-      - name: PHPUnit tests (disabled for speed)
-        if: false
-        shell: bash
-        run: moodle-plugin-ci phpunit --fail-on-warning
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
+
+      - name: Start Selenium
+        shell: bash
+        run: java -jar /c/selenium/selenium-server.jar standalone --host 127.0.0.1 &
 
       - name: Setup Apache
         run: |
@@ -91,7 +90,7 @@ jobs:
           AddType application/x-httpd-php .php
           PHPIniDir $phpPath
           # Overwrite DocumentRoot
-          DocumentRoot D:/a/moodle-quiz_essaydownload/moodle-quiz_essaydownload
+          DocumentRoot D:/a/moodle-quiz_essaydownload/moodle-quiz_essaydownload/moodle
           "@
           # Change Server Config
           $config = Get-Content $confFile -Raw
@@ -107,18 +106,22 @@ jobs:
           Start-Service apache
           Get-Service apache
 
+      - name: PHPUnit tests
+        shell: bash
+        run: moodle-plugin-ci phpunit --fail-on-warning
+
       - name: Init behat
         shell: bash
         run: |
           php moodle/admin/tool/behat/cli/init.php
 
-      - name: Behat features (disabled)
+      - name: Behat features
         shell: bash
         run: |
-          ./moodle/vendor/bin/behat --config /d/a/moodle-quiz_essaydownload/moodle-quiz_essaydownload/moodledata/behat_moodledata/behatrun/behat/behat.yml  --profile firefox
+          ./moodle/vendor/bin/behat --config /d/a/moodle-quiz_essaydownload/moodle-quiz_essaydownload/moodledata/behat_moodledata/behatrun/behat/behat.yml  --profile firefox --tags quiz_essaydownload
 
       - name: Setup tmate session (disabled)
-        if: always()
+        if: false
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 30
 

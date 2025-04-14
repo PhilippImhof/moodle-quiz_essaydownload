@@ -1249,15 +1249,18 @@ final class report_test extends \advanced_testcase {
 
         // Prepare image.
         $fs = get_file_storage();
-        $fileinfo = array(
+        $fileinfo = [
             'contextid' => $cat->contextid,
             'component' => 'question',
             'filearea' => 'questiontext',
             'itemid' => $question->id,
             'filepath' => '/',
-            'filename' => 'image.png'
+            'filename' => 'image.png',
+        ];
+        $file = $fs->create_file_from_pathname(
+            $fileinfo,
+            $CFG->dirroot . '/mod/quiz/report/essaydownload/tests/fixtures/image.png'
         );
-        $file = $fs->create_file_from_pathname($fileinfo, $CFG->dirroot . '/mod/quiz/report/essaydownload/tests/fixtures/image.png');
 
         // Add a student submit an attempt.
         $student = $generator->create_user();

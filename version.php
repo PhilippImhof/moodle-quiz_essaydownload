@@ -25,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2025011200;
+$plugin->version   = 2025041400;
 $plugin->requires  = 2022112800;
-$plugin->supported = [401, 405];
+$plugin->supported = [401, 500];
 $plugin->component = 'quiz_essaydownload';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.6.1';
+$plugin->release   = '1.6.2';
 

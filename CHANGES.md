@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.6.2 (2025-04-14)
+
+- assure compatibility with Moodle 5.0
+
 ### 1.6.1 (2025-01-12)
 
 - bugfix: fix export of question text with embedded images

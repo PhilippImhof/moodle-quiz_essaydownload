@@ -30,7 +30,7 @@ jobs:
       - name: Configure node & npm
         uses: actions/setup-node@v4
         with:
-          node-version: lts/iron
+          node-version: lts/jod
 
       - name: Install node
         run: |

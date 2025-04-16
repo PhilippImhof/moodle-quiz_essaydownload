@@ -20,6 +20,7 @@ use quiz_essaydownload_options;
 use quiz_essaydownload_report;
 
 use Generator;
+use mod_quiz\quiz_attempt;
 use Throwable;
 
 defined('MOODLE_INTERNAL') || die();
@@ -42,6 +43,27 @@ require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
  */
 final class report_test extends \advanced_testcase {
     use \quiz_question_helper_test_trait;
+
+    /**
+     * Call quiz_attempt::process_finish() for Moodle < 5.0 or quiz_attempt::process_submit()
+     * and quiz_attempt::process_grade_submission() for Moodle 5.0 and later, because the
+     * method process_finish() is deprecated in the context of MDL-68806.
+     * Note: We leave out the type hint for the first parameter in order to be compatible
+     * accross all branches, as quiz_attempt has different name spaces in Moodle 4.1 than
+     * in more recent versions.
+     *
+     * @param quiz_attempt $attemptobj attempt object used to call the processing method
+     * @param integer $time timestamp
+     * @return void
+     */
+    private function process_submit_or_finish($attemptobj, int $time): void {
+        if (method_exists($attemptobj, 'process_submit')) {
+            $attemptobj->process_submit($time, false);
+            $attemptobj->process_grade_submission($time);
+        } else {
+            $attemptobj->process_finish($time, false);
+        }
+    }
 
     public function test_quiz_has_essay_questions_when_it_has(): void {
         $this->resetAfterTest();
@@ -289,7 +311,7 @@ final class report_test extends \advanced_testcase {
             2 => ['answer' => 'frog', 'answerformat' => FORMAT_PLAIN],
         ];
         $firstattempt[2]->process_submitted_actions($timenow, false, $tosubmit);
-        $firstattempt[2]->process_finish($timenow, false);
+        $this->process_submit_or_finish($firstattempt[2], $timenow);
 
         $secondattempt = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student, 2);
         $tosubmit = [
@@ -297,7 +319,7 @@ final class report_test extends \advanced_testcase {
             2 => ['answer' => 'wrong answer', 'answerformat' => FORMAT_PLAIN],
         ];
         $secondattempt[2]->process_submitted_actions($timenow + 10, false, $tosubmit);
-        $secondattempt[2]->process_finish($timenow, false);
+        $this->process_submit_or_finish($secondattempt[2], $timenow);
 
         // Init report and fetch the attemps.
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
@@ -507,7 +529,7 @@ final class report_test extends \advanced_testcase {
         $timenow = time();
         $tosubmit = [1 => ['answer' => 'Here we go.', 'answerformat' => FORMAT_PLAIN]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -568,7 +590,7 @@ final class report_test extends \advanced_testcase {
             2 => ['answer' => $questionsandanswers[2]['response'], 'answerformat' => FORMAT_PLAIN],
         ];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -627,7 +649,7 @@ final class report_test extends \advanced_testcase {
             3 => ['answer' => 'Here we go.', 'answerformat' => FORMAT_PLAIN],
         ];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -678,7 +700,7 @@ final class report_test extends \advanced_testcase {
             1 => ['answer' => 'frog'],
         ];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -721,7 +743,7 @@ final class report_test extends \advanced_testcase {
             1 => ['answer' => 'Foo Bar Quak.', 'answerformat' => FORMAT_PLAIN],
         ];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -799,7 +821,7 @@ final class report_test extends \advanced_testcase {
             'attachments' => $attachementsdraftid,
         ]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -865,7 +887,7 @@ final class report_test extends \advanced_testcase {
         $timenow = time();
         $tosubmit = [1 => ['answer' => '', 'answerformat' => FORMAT_PLAIN]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -917,7 +939,7 @@ final class report_test extends \advanced_testcase {
         $timenow = time();
         $tosubmit = [1 => ['answer' => '<p>Here<br>we<br>go.</p><p>Foo</p><div>Bar</div>', 'answerformat' => FORMAT_HTML]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -976,7 +998,7 @@ final class report_test extends \advanced_testcase {
         $timenow = time();
         $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -1024,7 +1046,7 @@ final class report_test extends \advanced_testcase {
         $timenow = time();
         $tosubmit = [1 => ['answer' => "Here\nwe\ngo.", 'answerformat' => FORMAT_PLAIN]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -1072,7 +1094,7 @@ final class report_test extends \advanced_testcase {
         $timenow = time();
         $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -1128,7 +1150,7 @@ final class report_test extends \advanced_testcase {
         $timenow = time();
         $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
@@ -1269,7 +1291,7 @@ final class report_test extends \advanced_testcase {
         $timenow = time();
         $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
-        $attemptobj->process_finish($timenow, false);
+        $this->process_submit_or_finish($attemptobj, $timenow);
 
         // Initialize report.
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);

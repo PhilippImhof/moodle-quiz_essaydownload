@@ -48,12 +48,15 @@ final class report_test extends \advanced_testcase {
      * Call quiz_attempt::process_finish() for Moodle < 5.0 or quiz_attempt::process_submit()
      * and quiz_attempt::process_grade_submission() for Moodle 5.0 and later, because the
      * method process_finish() is deprecated in the context of MDL-68806.
+     * Note: We leave out the type hint for the first parameter in order to be compatible
+     * accross all branches, as quiz_attempt has different name spaces in Moodle 4.1 than
+     * in more recent versions.
      *
      * @param quiz_attempt $attemptobj attempt object used to call the processing method
      * @param integer $time timestamp
      * @return void
      */
-    private function process_submit_or_finish(quiz_attempt $attemptobj, int $time): void {
+    private function process_submit_or_finish($attemptobj, int $time): void {
         if (method_exists($attemptobj, 'process_submit')) {
             $attemptobj->process_submit($time, false);
             $attemptobj->process_grade_submission($time);

@@ -52,7 +52,7 @@ final class report_test extends \advanced_testcase {
      * in more recent versions.
      *
      * @param quiz_attempt $attemptobj attempt object used to call the processing method
-     * @param integer $time timestamp
+     * @param int $time timestamp
      * @return void
      */
     private function process_submit_or_finish($attemptobj, int $time): void {

@@ -2,6 +2,12 @@
 
 ### 1.6.2 (2025-04-14)
 
+- assure compatibility with Moodle 5.1
+- internal: update CI for Moodle 5.1
+- internal: avoid debugging notice in tests with Moodle 5.0
+
+### 1.6.2 (2025-04-14)
+
 - assure compatibility with Moodle 5.0
 
 ### 1.6.1 (2025-01-12)

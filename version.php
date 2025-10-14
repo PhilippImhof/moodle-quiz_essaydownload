@@ -31,4 +31,3 @@ $plugin->supported = [401, 500];
 $plugin->component = 'quiz_essaydownload';
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->release   = '1.6.2';
-

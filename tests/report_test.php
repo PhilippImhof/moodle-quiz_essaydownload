@@ -16,11 +16,10 @@
 
 namespace quiz_essaydownload;
 
-use quiz_essaydownload_options;
-use quiz_essaydownload_report;
-
 use Generator;
 use mod_quiz\quiz_attempt;
+use quiz_essaydownload_options;
+use quiz_essaydownload_report;
 use Throwable;
 
 defined('MOODLE_INTERNAL') || die();
@@ -53,7 +52,7 @@ final class report_test extends \advanced_testcase {
      * in more recent versions.
      *
      * @param quiz_attempt $attemptobj attempt object used to call the processing method
-     * @param integer $time timestamp
+     * @param int $time timestamp
      * @return void
      */
     private function process_submit_or_finish($attemptobj, int $time): void {
@@ -161,7 +160,7 @@ final class report_test extends \advanced_testcase {
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
 
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Use reflection to force shortening of names.
@@ -225,7 +224,7 @@ final class report_test extends \advanced_testcase {
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
 
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Use reflection to force other name format.
@@ -324,7 +323,7 @@ final class report_test extends \advanced_testcase {
         // Init report and fetch the attemps.
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
         $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
 
@@ -366,7 +365,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attemps using the report's API.
@@ -430,7 +429,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attemps using the report's API.
@@ -468,7 +467,7 @@ final class report_test extends \advanced_testcase {
         $generator->enrol_user($teacher->id, $course->id, 'teacher');
         $generator->create_group_member(['groupid' => $group2->id, 'userid' => $teacher->id]);
         $this->setUser($teacher);
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
         $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
         self::assertCount(3, $fetchedattempts);
@@ -496,7 +495,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attemps using the report's API.
@@ -523,7 +522,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a response and finish the attempt.
         $timenow = time();
@@ -533,7 +532,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attemp using the report's API.
@@ -581,7 +580,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a response and finish the attempt.
         $timenow = time();
@@ -594,7 +593,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attemp using the report's API.
@@ -638,7 +637,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a response and finish the attempt. Note that the first question will be shortanswer
         // asking for an amphibian and second question is numerical asking for pi to two decimal places.
@@ -653,7 +652,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attemp using the report's API.
@@ -691,7 +690,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a response and finish the attempt. Note that the random question will surely
         // resolve to a shortanswer question.
@@ -704,7 +703,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // The quiz contains a random question, so the rough first check should return true.
@@ -734,7 +733,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a response and finish the attempt. Note that the random question will surely
         // resolve to a shortanswer question.
@@ -747,7 +746,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attemp using the report's API.
@@ -786,7 +785,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a first response.
         $this->setUser($student);
@@ -825,7 +824,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Use reflection to force text source to plain (i. e. summary).
@@ -881,7 +880,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Finish the attempt without submitting an answer.
         $timenow = time();
@@ -891,7 +890,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attemp using the report's API.
@@ -933,7 +932,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a response and finish the attempt.
         $timenow = time();
@@ -943,7 +942,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Use reflection to force options.
@@ -992,7 +991,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a response and finish the attempt.
         $timenow = time();
@@ -1002,7 +1001,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attemp using the report's API.
@@ -1040,7 +1039,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a response and finish the attempt.
         $timenow = time();
@@ -1050,7 +1049,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attemp using the report's API.
@@ -1088,7 +1087,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a response and finish the attempt.
         $timenow = time();
@@ -1098,7 +1097,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Use reflection to force options.
@@ -1144,7 +1143,7 @@ final class report_test extends \advanced_testcase {
         // Add a student and start an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
 
         // Submit a response and finish the attempt.
         $timenow = time();
@@ -1154,7 +1153,7 @@ final class report_test extends \advanced_testcase {
 
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Use reflection to force options.
@@ -1287,7 +1286,7 @@ final class report_test extends \advanced_testcase {
         // Add a student submit an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        list($quizobj, $quba, $attemptobj) = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
         $timenow = time();
         $tosubmit = [1 => ['answer' => '<p>Here <strong>we</strong> go.</p>', 'answerformat' => FORMAT_HTML]];
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
@@ -1296,7 +1295,7 @@ final class report_test extends \advanced_testcase {
         // Initialize report.
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
         $report = new quiz_essaydownload_report();
-        list($currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins) =
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
 
         // Fetch the attempt and details using the report's API.

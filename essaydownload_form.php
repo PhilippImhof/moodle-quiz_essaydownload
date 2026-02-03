@@ -119,6 +119,10 @@ class quiz_essaydownload_form extends moodleform {
             [
                 'lastfirst' => get_string('lastfirst', 'quiz_essaydownload'),
                 'firstlast' => get_string('firstlast', 'quiz_essaydownload'),
+                'useridlastfirst' => get_string('useridlastfirst', 'quiz_essaydownload'),
+                'useridfirstlast' => get_string('useridfirstlast', 'quiz_essaydownload'),
+                'usernamelastfirst' => get_string('usernamelastfirst', 'quiz_essaydownload'),
+                'usernamefirstlast' => get_string('usernamefirstlast', 'quiz_essaydownload'),
             ]
         );
         $mform->setType('nameordering', PARAM_ALPHA);

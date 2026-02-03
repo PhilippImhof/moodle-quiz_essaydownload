@@ -94,3 +94,7 @@ $string['statisticsnote'] = '{$a->words} words, {$a->chars} characters (not coun
 $string['troubleshooting'] = 'Troubleshooting';
 $string['useflatarchive'] = 'Use flat folder hierarchy in archive';
 $string['useflatarchive_help'] = 'If this option is checked, the archive\'s folder hierarchy will be "flatter", i. e. instead of having <i>Attempt_X/Question_Y/response.pdf</i> you will have <i>Attempt_X/Question_Y_response.pdf</i> (or similar if grouped by question). As a consequence, you will need fewer clicks to get your documents.';
+$string['useridfirstlast'] = 'UserID - First name - Last name';
+$string['useridlastfirst'] = 'UserID - Last name - First name';
+$string['usernamefirstlast'] = 'Username - First name - Last name';
+$string['usernamelastfirst'] = 'Username - Last name - First name';

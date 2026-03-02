@@ -1,8 +1,8 @@
 @quiz @quiz_essaydownload @javascript
-Feature: Show notification, if ZIP archive will be empty pre-5.2
+Feature: Show notification, if ZIP archive will be empty for 5.2+
 
   Background:
-    Given the site is running Moodle version 5.1 or lower
+    Given the site is running Moodle version 5.2 or higher
     Given the following "course" exist:
       | fullname | shortname | category |
       | Course 1 | C1        | 0        |
@@ -21,13 +21,12 @@ Feature: Show notification, if ZIP archive will be empty pre-5.2
       | activity | name   | intro              | course |
       | quiz     | Quiz 1 | Quiz 1 description | C1     |
     And the following "questions" exist:
-      | questioncategory | qtype       | name                    | questiontext   |
-      | Test questions   | truefalse   | Q1                      | First question |
-      | Test questions   | shortanswer | Q2                      | Foo            |
-      | Test questions   | random      | Random (Test questions) | 0              |
+      | questioncategory | qtype       | name | questiontext   |
+      | Test questions   | truefalse   | Q1   | First question |
+      | Test questions   | shortanswer | Q2   | Foo            |
     And quiz "Quiz 1" contains the following questions:
-      | question                | page | maxmark |
-      | Random (Test questions) | 1    | 1.0     |
+      | question                | page | randomcategory |
+      | Random (Test questions) | 1    | Test questions |
     And user "student1" has attempted "Quiz 1" with responses:
       | slot | response |
       | 1    | True     |

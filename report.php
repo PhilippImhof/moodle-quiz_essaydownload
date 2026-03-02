@@ -218,8 +218,13 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         }
 
         foreach ($questions as $question) {
-            // If we find an essay or random question, we leave early.
-            if (in_array($question->qtype, ['essay', 'random'])) {
+            // If we find an essay or random question, we leave early. Starting from Moodle 5.2,
+            // question type qtype_random is gone, so we have to test differently.
+            $isnewrandom = false;
+            if (property_exists($question, 'random')) {
+                $isnewrandom = ($question->random === true && $question->qtype === null);
+            }
+            if (in_array($question->qtype, ['essay', 'random']) || $isnewrandom) {
                 return true;
             }
         }

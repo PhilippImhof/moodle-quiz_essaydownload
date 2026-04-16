@@ -273,7 +273,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $results = $DB->get_records_sql($sql, ['quizid' => $this->quiz->id] + $joins->params);
 
         $attempts = [];
-        $nametemplate = $this->options->nametemplate;
+        $filenametemplate = $this->options->filenametemplate;
         foreach ($results as $result) {
             $attempts[$result->attemptid]['firstname'] = $result->firstname;
             $attempts[$result->attemptid]['lastname'] = $result->lastname;
@@ -288,10 +288,10 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $result->firstname = substr($result->firstname, 0, 40);
             }
 
-            $name = str_replace($this->placeholders, $attempts[$result->attemptid], $nametemplate);
+            $filename = str_replace($this->placeholders, $attempts[$result->attemptid], $filenametemplate);
 
             // Build the path for this attempt: <name>_<attemptid>_<date/time finished>.
-            $path = $name . '_' . $result->attemptid;
+            $path = $filename . '_' . $result->attemptid;
             $path = $path . '_' .  date('Ymd_His', $result->timefinish);
             $path = self::clean_filename($path);
 

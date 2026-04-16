@@ -149,6 +149,7 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $toform->marginleft = $this->marginleft;
         $toform->marginright = $this->marginright;
         $toform->margintop = $this->margintop;
+        $toform->nametemplate = $this->nametemplate;
         $toform->filenametemplate = $this->filenametemplate;
         $toform->pageformat = $this->pageformat;
         $toform->questiontext = $this->questiontext;
@@ -181,8 +182,8 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->marginleft = $fromform->marginleft ?? '';
         $this->marginright = $fromform->marginright ?? '';
         $this->margintop = $fromform->margintop ?? '';
-        $this->filenametemplate = $fromform->filenametemplate;
         $this->nametemplate = $fromform->nametemplate;
+        $this->filenametemplate = $fromform->filenametemplate;
         $this->pageformat = $fromform->pageformat ?? '';
         $this->questiontext = $fromform->questiontext;
         $this->shortennames = $fromform->shortennames;

@@ -268,12 +268,22 @@ class quiz_essaydownload_form extends moodleform {
 
         // Checks on provided file name template.
         if (isset($data['filenametemplate']) && !empty(isset($data['filenametemplate']))) {
-            $errors = $this->templatevalidation($data['filenametemplate'], true);
+            $filenametemplateerror = $this->templatevalidation($data['filenametemplate'], true);
+            if ($filenametemplateerror == 'invalidchar') {
+                $errors['filenametemplate'] = get_string('errorinvalidchars', 'quiz_essaydownload');
+            } else if ($filenametemplateerror == 'invalidchar') {
+                $errors['filenametemplate'] = get_string('errorinvalidtoken', 'quiz_essaydownload');
+            }
         }
 
         // Checks on provided name template.
         if (isset($data['nametemplate']) && !empty(isset($data['nametemplate']))) {
-            $errors = $this->templatevalidation($data['nametemplate']);
+            $nametemplateerror = $this->templatevalidation($data['nametemplate']);
+            if ($nametemplateerror == 'invalidchar') {
+                $errors['nametemplateerror'] = get_string('errorinvalidchars', 'quiz_essaydownload');
+            } else if ($nametemplateerror == 'invalidchar') {
+                $errors['nametemplateerror'] = get_string('errorinvalidtoken', 'quiz_essaydownload');
+            }
         }
 
         // No further validation to be done if using plain text format.
@@ -299,7 +309,7 @@ class quiz_essaydownload_form extends moodleform {
      *
      * @param string $template the template to check for valid placeholders and characters.
      * @param bool $filename is the template used as a filename.
-     * @return array errors in form ['element_name' => 'error message'] or [] if no errors
+     * @return string|none errortype type of error in the template
      */
     private function templatevalidation($template, $filename = false) {
         if ($filename) {
@@ -307,30 +317,27 @@ class quiz_essaydownload_form extends moodleform {
             $forbiddenchars = ['\\', '/', "\0", '|', '"', '*', '?', '<', '>'];
             foreach ($forbiddenchars as $char) {
                 if (strpos($template, $char) !== false) {
-                    $errors['filenametemplate'] = get_string('errorinvalidchars', 'quiz_essaydownload');
-                    break;
+                    return 'invalidchar';
                 }
             }
         }
 
         // Get array of valid placeholders from report class.
         $reflector = new \ReflectionClass('quiz_essaydownload_report');
-        $property = $reflector->getProperty('placeholders');
-        $validplaceholders = $property->getValue();
+        $properties = $reflector->getDefaultProperties();
+        $validplaceholders = $properties['placeholders'];
 
         // Check if the provided placeholders are valid.
         // Get array of placeholders in  filenametemplate.
         preg_match_all('/%([^%]+)%/', $template, $tokens);
-        $foundtokens = array_unique(array_merge($tokens[1], $tokens[2]));
+        $foundtokens = array_unique($tokens[0]);
 
         // Check if all $foundtokens are $validplaceholders.
         foreach ($foundtokens as $token) {
-            $placeholderpattern = '%' . $token . '%';
-            if (!in_array($placeholderpattern, $validplaceholders)) {
-                $errors['filenametemplate'] = get_string('errorinvalidtoken', 'quiz_essaydownload');
-                break;
+            if (!in_array($token, $validplaceholders)) {
+                return 'invalidtoken';
             }
         }
-        return $errors;
+        return null;
     }
 }

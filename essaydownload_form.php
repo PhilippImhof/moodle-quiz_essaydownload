@@ -113,19 +113,20 @@ class quiz_essaydownload_form extends moodleform {
         }
 
         $mform->addElement(
-            'select',
-            'nameordering',
-            get_string('nameordering', 'quiz_essaydownload'),
-            [
-                'lastfirst' => get_string('lastfirst', 'quiz_essaydownload'),
-                'firstlast' => get_string('firstlast', 'quiz_essaydownload'),
-                'useridlastfirst' => get_string('useridlastfirst', 'quiz_essaydownload'),
-                'useridfirstlast' => get_string('useridfirstlast', 'quiz_essaydownload'),
-                'usernamelastfirst' => get_string('usernamelastfirst', 'quiz_essaydownload'),
-                'usernamefirstlast' => get_string('usernamefirstlast', 'quiz_essaydownload'),
-            ]
+            'text',
+            'filenametemplate',
+            get_string('filenametemplate', 'quiz_essaydownload'),
         );
-        $mform->setType('nameordering', PARAM_ALPHA);
+        $mform->setType('filenametemplate', PARAM_RAW);
+        $mform->addHelpButton('filenametemplate', 'filenametemplatehelp', 'quiz_essaydownload');
+
+        $mform->addElement(
+            'text',
+            'nametemplate',
+            get_string('nametemplate', 'quiz_essaydownload'),
+        );
+        $mform->setType('nametemplate', PARAM_RAW);
+        $mform->addHelpButton('nametemplate', 'nametemplatehelp', 'quiz_essaydownload');
 
         $mform->addElement(
             'advcheckbox',

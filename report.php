@@ -88,6 +88,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         self::OUTPUT_RESPONSE => null,
     ];
 
+    /** @var array placeholders for name and filename strings */
+    public array $placeholders = ['%firstname%', '%lastname%', '%userid%', '%idnumber%', '%username%'];
+
     /**
      * Override the parent function, because we have some custom stuff to initialise.
      *
@@ -256,7 +259,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $filteroneattempt = '1 = 1';
         }
 
-        $sql = "SELECT DISTINCT a.id attemptid, a.timefinish, a.userid, u.username, u.firstname, u.lastname
+        $sql = "SELECT DISTINCT a.id attemptid, a.timefinish, a.userid, u.username, u.firstname, u.lastname, u.idnumber
                            FROM {quiz_attempts} a
                       LEFT JOIN {user} u ON a.userid = u.id
                                 $joins->joins
@@ -270,10 +273,12 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $results = $DB->get_records_sql($sql, ['quizid' => $this->quiz->id] + $joins->params);
 
         $attempts = [];
+        $nametemplate = $this->options->nametemplate;
         foreach ($results as $result) {
             $attempts[$result->attemptid]['firstname'] = $result->firstname;
             $attempts[$result->attemptid]['lastname'] = $result->lastname;
             $attempts[$result->attemptid]['userid'] = $result->userid;
+            $attempts[$result->attemptid]['idnumber'] = $result->idnumber;
             $attempts[$result->attemptid]['username'] = $result->username;
 
             // If the user has requested short filenames, we limit the last and first name to 40
@@ -283,27 +288,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $result->firstname = substr($result->firstname, 0, 40);
             }
 
-            // The user can choose whether to start with the first name or the last name.
-            switch ($this->options->nameordering) {
-                case 'firstlast':
-                default:
-                    $name = $result->firstname . '_' . $result->lastname;
-                    break;
-                case 'lastfirst':
-                    $name = $result->lastname . '_' . $result->firstname;
-                    break;
-                case 'useridfirstlast':
-                    $name = $result->userid . '_' . $result->firstname . '_' . $result->lastname;
-                    break;
-                case 'useridlastfirst':
-                    $name = $result->userid . '_' . $result->lastname . '_' . $result->firstname;
-                    break;
-                case 'usernamefirstlast':
-                    $name = $result->username . '_' . $result->firstname . '_' . $result->lastname;
-                    break;
-                case 'usernamelastfirst':
-                    $name = $result->username . '_' . $result->lastname . '_' . $result->firstname;
-            }
+            $name = str_replace($this->placeholders, $attempts[$result->attemptid], $nametemplate);
 
             // Build the path for this attempt: <name>_<attemptid>_<date/time finished>.
             $path = $name . '_' . $result->attemptid;
@@ -525,6 +510,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $questionno = 0;
             $nbquestions = count($questions);
 
+            $nametemplate = $this->options->nametemplate;
             foreach ($questions as $questionpath => $questiondetails) {
                 $questionno++;
 
@@ -541,26 +527,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $groupedpath = strstr($path, '/', true) . '_allquestions_';
 
                 // Build the full name according to user setting.
-                switch ($this->options->nameordering) {
-                    case 'firstlast':
-                    default:
-                        $fullname  = $attemptdata['firstname'] . ' ' . $attemptdata['lastname'];
-                        break;
-                    case 'lastfirst':
-                        $fullname  = $attemptdata['lastname'] . ' ' . $attemptdata['firstname'];
-                        break;
-                    case 'useridfirstlast':
-                        $fullname  = $attemptdata['userid'] . ' ' . $attemptdata['firstname'] . ' ' . $attemptdata['lastname'];
-                        break;
-                    case 'useridlastfirst':
-                        $fullname  = $attemptdata['userid'] . ' ' . $attemptdata['lastname'] . ' ' . $attemptdata['firstname'];
-                        break;
-                    case 'usernamefirstlast':
-                        $fullname  = $attemptdata['username'] . ' ' . $attemptdata['firstname'] . ' ' . $attemptdata['lastname'];
-                        break;
-                    case 'usernamelastfirst':
-                        $fullname  = $attemptdata['username'] . ' ' . $attemptdata['lastname'] . ' ' . $attemptdata['firstname'];
-                }
+                $fullname = str_replace($this->placeholders, $attemptdata, $nametemplate);
 
                 try {
                     // If the user wants a flat archive structure, we will store stuff as attempt_1/question_1_response.pdf

@@ -118,7 +118,7 @@ class quiz_essaydownload_form extends moodleform {
             get_string('filenametemplate', 'quiz_essaydownload'),
         );
         $mform->setType('filenametemplate', PARAM_RAW);
-        $mform->addHelpButton('filenametemplate', 'filenametemplatehelp', 'quiz_essaydownload');
+        $mform->addHelpButton('filenametemplate', 'filenametemplate', 'quiz_essaydownload');
 
         $mform->addElement(
             'text',
@@ -126,7 +126,7 @@ class quiz_essaydownload_form extends moodleform {
             get_string('nametemplate', 'quiz_essaydownload'),
         );
         $mform->setType('nametemplate', PARAM_RAW);
-        $mform->addHelpButton('nametemplate', 'nametemplatehelp', 'quiz_essaydownload');
+        $mform->addHelpButton('nametemplate', 'nametemplate', 'quiz_essaydownload');
 
         $mform->addElement(
             'advcheckbox',
@@ -271,8 +271,8 @@ class quiz_essaydownload_form extends moodleform {
             $filenametemplateerror = $this->templatevalidation($data['filenametemplate'], true);
             if ($filenametemplateerror == 'invalidchar') {
                 $errors['filenametemplate'] = get_string('errorinvalidchars', 'quiz_essaydownload');
-            } else if ($filenametemplateerror == 'invalidchar') {
-                $errors['filenametemplate'] = get_string('errorinvalidtoken', 'quiz_essaydownload');
+            } else if ($filenametemplateerror == 'invalidtoken') {
+                $errors['filenametemplate'] = get_string('errorinvalidtokens', 'quiz_essaydownload');
             }
         }
 
@@ -281,8 +281,8 @@ class quiz_essaydownload_form extends moodleform {
             $nametemplateerror = $this->templatevalidation($data['nametemplate']);
             if ($nametemplateerror == 'invalidchar') {
                 $errors['nametemplateerror'] = get_string('errorinvalidchars', 'quiz_essaydownload');
-            } else if ($nametemplateerror == 'invalidchar') {
-                $errors['nametemplateerror'] = get_string('errorinvalidtoken', 'quiz_essaydownload');
+            } else if ($nametemplateerror == 'invalidtoken') {
+                $errors['nametemplateerror'] = get_string('errorinvalidtokens', 'quiz_essaydownload');
             }
         }
 

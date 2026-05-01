@@ -232,7 +232,7 @@ final class report_test extends \advanced_testcase {
         $reflectedoptions = $reflectedreport->getProperty('options');
         $reflectedoptions->setAccessible(true);
         $options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
-        $options->nametemplate = '%firstname% %lastname%';
+        $options->nametemplate = '%lastname% %firstname%';
         $reflectedoptions->setValue($report, $options);
 
         // Fetch the attemps using the report's API.

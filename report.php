@@ -266,8 +266,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         }
 
         // Note: As we are going to re-use this data for the replacement of placeholders, the first and last name,
-        // the userid, the idnumber and the username should be selected in that order and as the first five fields.
-        $sql = "SELECT DISTINCT u.firstname, u.lastname, a.userid, u.idnumber, u.username, a.id attemptid, a.timefinish
+        // the userid, the idnumber and the username should be selected in that order and as the first five fields
+        // right after the a.id attemptid column. We need that one as the very first column, because it is unique.
+        $sql = "SELECT DISTINCT a.id attemptid, u.firstname, u.lastname, a.userid, u.idnumber, u.username, a.timefinish
                            FROM {quiz_attempts} a
                       LEFT JOIN {user} u ON a.userid = u.id
                                 $joins->joins
@@ -282,6 +283,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
 
         $attempts = [];
         $filenametemplate = $this->options->filenametemplate;
+        // We add a dummy placeholder for the attempt id, because that will be the very first column
+        // in our data array. The placeholder cannot be used for replacement.
+        $placeholders = ['%attemptid%', ...self::PLACEHOLDERS];
         foreach ($results as $result) {
             $attempts[$result->attemptid]['firstname'] = $result->firstname;
             $attempts[$result->attemptid]['lastname'] = $result->lastname;
@@ -296,7 +300,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $result->firstname = substr($result->firstname, 0, 40);
             }
 
-            $filename = str_replace(self::PLACEHOLDERS, get_object_vars($result), $filenametemplate);
+            $filename = str_replace($placeholders, get_object_vars($result), $filenametemplate);
 
             // Build the path for this attempt: <name>_<attemptid>_<date/time finished>.
             $path = $filename . '_' . $result->attemptid;

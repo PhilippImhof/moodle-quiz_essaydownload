@@ -94,10 +94,10 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     public $margintop = 20;
 
     /** @var string template for the name printed in the resulting file */
-    public $nametemplate = '%firstname% %lastname%';
+    public $nametemplate = '%lastname% %firstname%';
 
     /** @var string template for the name printed in the resulting file */
-    public $filenametemplate = '%userid%_%username%';
+    public $filenametemplate = '%lastname%_%firstname%';
 
     /** @var string page format for PDF export */
     public $pageformat = 'a4';

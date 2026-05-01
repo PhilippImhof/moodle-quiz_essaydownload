@@ -314,7 +314,7 @@ class quiz_essaydownload_form extends moodleform {
     private function templatevalidation($template, $filename = false) {
         if ($filename) {
             // Check if the provided filename contains  forbidden characters.
-            $forbiddenchars = ['\\', '/', "\0", '|', '"', '*', '?', '<', '>'];
+            $forbiddenchars = ['\\', '/', "\0", '|', '"', "'", '*', '?', '<', '>'];
             foreach ($forbiddenchars as $char) {
                 if (strpos($template, $char) !== false) {
                     return 'invalidchar';

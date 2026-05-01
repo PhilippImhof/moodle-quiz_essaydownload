@@ -294,7 +294,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $result->firstname = substr($result->firstname, 0, 40);
             }
 
-            $filename = str_replace($this->placeholders, $attempts[$result->attemptid], $filenametemplate);
+            $filename = str_replace(self::PLACEHOLDERS, $attempts[$result->attemptid], $filenametemplate);
 
             // Build the path for this attempt: <name>_<attemptid>_<date/time finished>.
             $path = $filename . '_' . $result->attemptid;
@@ -533,7 +533,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $groupedpath = strstr($path, '/', true) . '_allquestions_';
 
                 // Build the full name according to user setting.
-                $fullname = str_replace($this->placeholders, $attemptdata, $nametemplate);
+                $fullname = str_replace(self::PLACEHOLDERS, $attemptdata, $nametemplate);
 
                 try {
                     // If the user wants a flat archive structure, we will store stuff as attempt_1/question_1_response.pdf

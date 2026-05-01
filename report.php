@@ -265,7 +265,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $filteroneattempt = '1 = 1';
         }
 
-        $sql = "SELECT DISTINCT a.id attemptid, a.timefinish, a.userid, u.username, u.firstname, u.lastname, u.idnumber
+        // Note: As we are going to re-use this data for the replacement of placeholders, the first and last name,
+        // the userid, the idnumber and the username should be selected in that order and as the first five fields.
+        $sql = "SELECT DISTINCT u.firstname, u.lastname, a.userid, u.idnumber, u.username, a.id attemptid, a.timefinish
                            FROM {quiz_attempts} a
                       LEFT JOIN {user} u ON a.userid = u.id
                                 $joins->joins
@@ -294,7 +296,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $result->firstname = substr($result->firstname, 0, 40);
             }
 
-            $filename = str_replace(self::PLACEHOLDERS, $attempts[$result->attemptid], $filenametemplate);
+            $filename = str_replace(self::PLACEHOLDERS, get_object_vars($result), $filenametemplate);
 
             // Build the path for this attempt: <name>_<attemptid>_<date/time finished>.
             $path = $filename . '_' . $result->attemptid;

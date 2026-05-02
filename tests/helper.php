@@ -175,28 +175,24 @@ class quiz_essaydownload_test_helper {
                 'firstname' => 'John L.',
                 'lastname' => 'Doe',
                 'username' => 'jdoe',
-                'userid' => '1',
                 'idnumber' => 'u1001',
             ],
             [
                 'firstname' => 'Jean',
                 'lastname' => 'D\'La Fontaine',
                 'username' => 'jdlafontaine',
-                'userid' => '2',
                 'idnumber' => 'u1002',
             ],
             [
                 'firstname' => 'Hans-Peter',
                 'lastname' => 'Müller',
                 'username' => 'hpmueller',
-                'userid' => '3',
                 'idnumber' => 'u1003',
             ],
             [
                 'firstname' => 'Little',
                 'lastname' => 'Bobby/Tables',
                 'username' => 'btables',
-                'userid' => '4',
                 'idnumber' => 'u1004',
             ],
         ];

@@ -205,7 +205,33 @@ final class report_test extends \advanced_testcase {
         self::assertStringStartsWith('Q_1_-_', array_keys($details)[0]);
     }
 
-    public function test_custom_name_order(): void {
+    /**
+     * Data provider. We use xxx for the user's ID, because we cannot know it beforehand.
+     *
+     * @return array
+     */
+    public static function provide_filename_templates(): array {
+        return [
+            ['First', '%firstname%'],
+            ['Last', '%lastname%'],
+            ['First-Last', '%firstname%-%lastname%'],
+            ['Last First', '%lastname% %firstname%'],
+            ['Last First (xxx)', '%lastname% %firstname% (%userid%)'],
+            ['Last First (xxx, flast)', '%lastname% %firstname% (%userid%, %username%)'],
+            ['Last First (xxx, flast, u111)', '%lastname% %firstname% (%userid%, %username%, %idnumber%)'],
+        ];
+    }
+
+    /**
+     * Test file name templates.
+     *
+     * @dataProvider provide_filename_templates
+     *
+     * @param string $expected expected file name
+     * @param string $template template to be used
+     * @return void
+     */
+    public function test_custom_name_order(string $expected, string $template): void {
         $this->resetAfterTest();
 
         // Create a course and a quiz with an essay question.
@@ -217,7 +243,9 @@ final class report_test extends \advanced_testcase {
         quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz);
 
         // Add a student and an attempt.
-        $student = \phpunit_util::get_data_generator()->create_user(['firstname' => 'First', 'lastname' => 'Last']);
+        $student = \phpunit_util::get_data_generator()->create_user(
+            ['firstname' => 'First', 'lastname' => 'Last', 'username' => 'flast', 'idnumber' => 'u111'],
+        );
         \phpunit_util::get_data_generator()->enrol_user($student->id, $course->id, 'student');
         $attempt = $this->attempt_quiz($quiz, $student);
 
@@ -232,7 +260,7 @@ final class report_test extends \advanced_testcase {
         $reflectedoptions = $reflectedreport->getProperty('options');
         $reflectedoptions->setAccessible(true);
         $options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
-        $options->filenametemplate = '%firstname%_%lastname%';
+        $options->filenametemplate = $template;
         $reflectedoptions->setValue($report, $options);
 
         // Fetch the attemps using the report's API.
@@ -251,10 +279,10 @@ final class report_test extends \advanced_testcase {
             self::assertEquals($student->firstname, $fetcheddata['firstname']);
             self::assertEquals($student->lastname, $fetcheddata['lastname']);
 
-            $firstname = clean_filename(str_replace(' ', '_', $student->firstname));
-            $lastname = clean_filename(str_replace(' ', '_', $student->lastname));
-
-            $name = $firstname . '_' . $lastname . '_' . $id . '_' . date('Ymd_His', $attemptobj->timefinish);
+            // The expected filename must be cleaned. Also we have to replace xxx by the student's userid.
+            $expected = clean_filename(str_replace(' ', '_', $expected));
+            $expected = str_replace('xxx', $student->id, $expected);
+            $name = $expected . '_' . $id . '_' . date('Ymd_His', $attemptobj->timefinish);
 
             // We will not compare the minutes and seconds, because there might be a small difference and
             // we don't really care. If the timestamp is correct up to the hours, we can safely assume the

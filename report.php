@@ -516,7 +516,6 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $questionno = 0;
             $nbquestions = count($questions);
 
-            $nametemplate = $this->options->nametemplate;
             foreach ($questions as $questionpath => $questiondetails) {
                 $questionno++;
 
@@ -531,9 +530,6 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 // they have been cleaned via PARAM_FILE. So we can just chop off at the slash and add our new
                 // "allquestions" path component.
                 $groupedpath = strstr($path, '/', true) . '_allquestions_';
-
-                // Build the full name according to user setting.
-                $fullname = str_replace(self::PLACEHOLDERS, $attemptdata, $nametemplate);
 
                 try {
                     // If the user wants a flat archive structure, we will store stuff as attempt_1/question_1_response.pdf
@@ -584,7 +580,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                                 self::OUTPUT_QUESTIONTEXT,
                                 $questiondetails['questiontext'],
                                 get_string('questiontext', 'question'),
-                                get_string('presentedto', 'quiz_essaydownload', $fullname),
+                                get_string('presentedto', 'quiz_essaydownload', $this->build_fullname($attemptdata)),
                                 '',
                                 $shipout,
                             );
@@ -666,6 +662,17 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
      */
     protected static function clean_filename(string $filename): string {
         return clean_filename(str_replace(' ', '_', $filename));
+    }
+
+    /**
+     * Build the student's full name (plus some additional data, if requested) to be put on the page's
+     * header, according to the name template set by the user.
+     *
+     * @param array $attemptdata
+     * @return string
+     */
+    protected function build_fullname(array $attemptdata): string {
+        return str_replace(self::PLACEHOLDERS, $attemptdata, $this->options->nametemplate);
     }
 
     /**

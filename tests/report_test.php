@@ -208,30 +208,28 @@ final class report_test extends \advanced_testcase {
     /**
      * Data provider. We use xxx for the user's ID, because we cannot know it beforehand.
      *
-     * @return array
+     * @return Generator
      */
-    public static function provide_filename_templates(): array {
-        return [
-            ['First', '%firstname%'],
-            ['Last', '%lastname%'],
-            ['First-Last', '%firstname%-%lastname%'],
-            ['Last First', '%lastname% %firstname%'],
-            ['Last First (xxx)', '%lastname% %firstname% (%userid%)'],
-            ['Last First (xxx, flast)', '%lastname% %firstname% (%userid%, %username%)'],
-            ['Last First (xxx, flast, u111)', '%lastname% %firstname% (%userid%, %username%, %idnumber%)'],
-        ];
+    public static function provide_templates(): Generator {
+        yield ['First', '%firstname%'];
+        yield ['Last', '%lastname%'];
+        yield ['First-Last', '%firstname%-%lastname%'];
+        yield ['Last First', '%lastname% %firstname%'];
+        yield ['Last First (xxx)', '%lastname% %firstname% (%userid%)'];
+        yield ['Last First (xxx, flast)', '%lastname% %firstname% (%userid%, %username%)'];
+        yield ['Last First (xxx, flast, u111)', '%lastname% %firstname% (%userid%, %username%, %idnumber%)'];
     }
 
     /**
      * Test file name templates.
      *
-     * @dataProvider provide_filename_templates
+     * @dataProvider provide_templates
      *
      * @param string $expected expected file name
      * @param string $template template to be used
      * @return void
      */
-    public function test_custom_name_order(string $expected, string $template): void {
+    public function test_filename_template(string $expected, string $template): void {
         $this->resetAfterTest();
 
         // Create a course and a quiz with an essay question.
@@ -290,6 +288,60 @@ final class report_test extends \advanced_testcase {
             self::assertStringStartsWith(substr($name, 0, -4), $fetcheddata['path']);
             $i++;
         }
+    }
+
+    /**
+     * Test name templates.
+     *
+     * @dataProvider provide_templates
+     *
+     * @param string $expected expected name
+     * @param string $template template to be used
+     * @return void
+     */
+    public function test_name_template(string $expected, string $template): void {
+        $this->resetAfterTest();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        $quiz->name = 'Quiz';
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz);
+
+        // Add a student and an attempt.
+        $student = \phpunit_util::get_data_generator()->create_user(
+            ['firstname' => 'First', 'lastname' => 'Last', 'username' => 'flast', 'idnumber' => 'u111'],
+        );
+        \phpunit_util::get_data_generator()->enrol_user($student->id, $course->id, 'student');
+        $attempt = $this->attempt_quiz($quiz, $student);
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Use reflection to force other name format.
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedoptions = $reflectedreport->getProperty('options');
+        $reflectedoptions->setAccessible(true);
+        $options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
+        $options->nametemplate = $template;
+        $reflectedoptions->setValue($report, $options);
+        $reflectedmethod = $reflectedreport->getMethod('build_fullname');
+        $reflectedmethod->setAccessible(true);
+
+        // Fetch the attemps using the report's API.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+
+        // There should be exactly one attempt.
+        self::assertCount(1, $fetchedattempts);
+
+        // Call the method that builds the full name according to the template.
+        $generatedname = $reflectedmethod->invoke($report, reset($fetchedattempts));
+        $expected = str_replace('xxx', $student->id, $expected);
+        self::assertEquals($expected, $generatedname);
     }
 
     /**

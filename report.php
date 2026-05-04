@@ -64,12 +64,6 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
     /** @var int */
     const OUTPUT_RESPONSE = 2;
 
-    /** @var int */
-    const VALIDATION_ERROR_TOKEN = 1;
-
-    /** @var int */
-    const VALIDATION_ERROR_CHARACTER = 2;
-
     /** @var array placeholders for name and filename strings */
     const PLACEHOLDERS = ['%firstname%', '%lastname%', '%userid%', '%idnumber%', '%username%'];
 

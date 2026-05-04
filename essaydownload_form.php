@@ -268,20 +268,14 @@ class quiz_essaydownload_form extends moodleform {
 
         // Checks on provided file name template.
         if (isset($data['filenametemplate']) && !empty(isset($data['filenametemplate']))) {
-            $filenametemplateerror = $this->validate_template($data['filenametemplate'], true);
-            if ($filenametemplateerror === quiz_essaydownload_report::VALIDATION_ERROR_CHARACTER) {
-                $errors['filenametemplate'] = get_string('errorinvalidchars', 'quiz_essaydownload');
-            } else if ($filenametemplateerror === quiz_essaydownload_report::VALIDATION_ERROR_TOKEN) {
+            if (!$this->is_valid_template($data['filenametemplate'])) {
                 $errors['filenametemplate'] = get_string('errorinvalidtokens', 'quiz_essaydownload');
             }
         }
 
         // Checks on provided name template.
         if (isset($data['nametemplate']) && !empty(isset($data['nametemplate']))) {
-            $nametemplateerror = $this->validate_template($data['nametemplate']);
-            if ($nametemplateerror === quiz_essaydownload_report::VALIDATION_ERROR_CHARACTER) {
-                $errors['nametemplateerror'] = get_string('errorinvalidchars', 'quiz_essaydownload');
-            } else if ($nametemplateerror === quiz_essaydownload_report::VALIDATION_ERROR_TOKEN) {
+            if (!$this->is_valid_template($data['nametemplate'])) {
                 $errors['nametemplateerror'] = get_string('errorinvalidtokens', 'quiz_essaydownload');
             }
         }
@@ -305,34 +299,20 @@ class quiz_essaydownload_form extends moodleform {
         return $errors;
     }
     /**
-     * Validation function for name templates. Checks if placeholders are valid and if invalid filename characters are present.
+     * Check if a template string only contains valid placeholders.
      *
-     * @param string $template the template to check for valid placeholders and characters.
-     * @param bool $filename is the template used as a filename.
-     * @return int type of error in the template, i. e. quiz_essaydownload_report::VALIDATION_ERROR_TOKEN
-     *                  or quiz_essaydownload_report::VALIDATION_ERROR_CHARACTER)
+     * @param string $template the template to check
+     * @return bool
      */
-    protected function validate_template(string $template, bool $filename = false): int {
-        // Check if the provided filename contains forbidden characters.
-        if ($filename) {
-            $forbiddenchars = ['\\', '/', "\0", '|', '"', "'", '*', '?', '<', '>'];
-            foreach ($forbiddenchars as $char) {
-                if (strpos($template, $char) !== false) {
-                    return quiz_essaydownload_report::VALIDATION_ERROR_CHARACTER;
-                }
-            }
-        }
-
-        // Check if the provided placeholders are valid.
+    protected function is_valid_template(string $template): bool {
         preg_match_all('/%([^%]+)%/', $template, $tokens);
         $foundtokens = array_unique($tokens[0]);
         foreach ($foundtokens as $token) {
             if (!in_array($token, quiz_essaydownload_report::PLACEHOLDERS)) {
-                return quiz_essaydownload_report::VALIDATION_ERROR_TOKEN;
+                return false;
             }
         }
 
-        // No errors found.
-        return 0;
+        return true;
     }
 }

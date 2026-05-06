@@ -29,38 +29,8 @@
  * @param int $oldversion Version number the plugin is being upgraded from.
  */
 function xmldb_quiz_essaydownload_upgrade($oldversion) {
-    global $DB;
-
     if ($oldversion < 2026042000) {
-        // We need to update the user preferences to the new template based settings.
-        $table = 'user_preferences';
-
-        // There is one deprecated preference and two new ones.
-        $oldpreference = 'quiz_essaydownload_nameordering';
-        $nametemplatepreference = 'quiz_essaydownload_nametemplate';
-        $filenametemplatepreference = 'quiz_essaydownload_filenametemplate';
-
-        // Get all already set preferences.
-        $records = $DB->get_records($table, ['name' => $oldpreference], '', 'userid, name, value');
-        // Delete old 'quiz_essaydownload_nameordering' preference from db.
-        $DB->delete_records($table, ['name' => $oldpreference]);
-
-        // Create array of objects for all preferences to be restored.
-        $newrecords = [];
-        foreach ($records as $record) {
-            $newrecords[] = [
-                'name' => $nametemplatepreference,
-                'value' => ($record->value == 'firstlast') ? '%firstname% %lastname%' : '%lastname% %firstname%',
-                'userid' => $record->userid,
-            ];
-            $newrecords[] = [
-                'name' => $filenametemplatepreference,
-                'value' => ($record->value == 'firstlast') ? '%firstname%_%lastname%' : '%lastname%_%firstname%',
-                'userid' => $record->userid,
-            ];
-        }
-        $DB->insert_records($table, $newrecords);
-
+        quiz_essaydownload\upgrade::nameordering_to_template();
         upgrade_plugin_savepoint(true, 2026042000, 'quiz', 'essaydownload');
     }
 

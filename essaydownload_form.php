@@ -266,23 +266,29 @@ class quiz_essaydownload_form extends moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
-        // Checks on provided file name template.
-        if (isset($data['filenametemplate']) && !empty(isset($data['filenametemplate']))) {
-            if (!$this->is_valid_template($data['filenametemplate'])) {
-                $errors['filenametemplate'] = get_string('errorinvalidtokens', 'quiz_essaydownload');
-            }
+        // Check if filename template is empty.
+        if (empty($data['filenametemplate'])) {
+            $errors['filenametemplate'] = get_string('erroremptyfilenametemplate', 'quiz_essaydownload');
         }
 
-        // Checks on provided name template.
-        if (isset($data['nametemplate']) && !empty(isset($data['nametemplate']))) {
-            if (!$this->is_valid_template($data['nametemplate'])) {
-                $errors['nametemplateerror'] = get_string('errorinvalidtokens', 'quiz_essaydownload');
-            }
+        // Checks on provided filename template.
+        if (!$this->is_valid_template($data['filenametemplate'])) {
+            $errors['filenametemplate'] = get_string('errorinvalidtokens', 'quiz_essaydownload');
         }
 
         // No further validation to be done if using plain text format.
         if ($data['fileformat'] === 'txt') {
             return $errors;
+        }
+
+        // Check if name template is empty.
+        if (empty($data['nametemplate'])) {
+            $errors['nametemplate'] = get_string('erroremptynametemplate', 'quiz_essaydownload');
+        }
+
+        // Checks on provided name template.
+        if (!$this->is_valid_template($data['nametemplate'])) {
+            $errors['nametemplate'] = get_string('errorinvalidtokens', 'quiz_essaydownload');
         }
 
         $margins = [$data['marginleft'], $data['marginright'], $data['margintop'], $data['marginbottom']];
@@ -308,6 +314,9 @@ class quiz_essaydownload_form extends moodleform {
         preg_match_all('/%([^%]+)%/', $template, $tokens);
         $foundtokens = array_unique($tokens[0]);
         foreach ($foundtokens as $token) {
+            if (empty($token)) {
+                continue;
+            }
             if (!in_array($token, quiz_essaydownload_report::PLACEHOLDERS)) {
                 return false;
             }

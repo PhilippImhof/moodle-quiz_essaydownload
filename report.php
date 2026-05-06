@@ -547,6 +547,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                             $header = get_string('response', 'quiz_essaydownload');
                         }
 
+                        $fullname = $this->build_fullname($attemptdata);
                         $pdfcontent = $this->generate_pdf(
                             self::OUTPUT_RESPONSE,
                             $this->add_statistics_if_requested($questiondetails['responsetext'], FORMAT_HTML),

@@ -102,14 +102,14 @@ Feature: Validation and display of the form
 
   Scenario: Invalid name template should lead to an error
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
-    And I set the field "ametemplate" to "%foobar% %lastname% %firstname%"
+    And I set the field "nametemplate" to "%foobar% %lastname% %firstname%"
     And I press "Download"
     And I wait until the page is ready
     Then I should see "Invalid placeholder found. Valid placeholders are: %firstname%, %lastname%, %userid%, %idnumber%, %username%."
 
   Scenario: Empty name template should lead to an error
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
-    And I set the field "filenametemplate" to ""
+    And I set the field "nametemplate" to ""
     And I press "Download"
     And I wait until the page is ready
     Then I should see "The name template must not be empty."

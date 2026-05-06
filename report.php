@@ -531,6 +531,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 // "allquestions" path component.
                 $groupedpath = strstr($path, '/', true) . '_allquestions_';
 
+                // Format fullname according to user's template.
+                $fullname = $this->build_fullname($attemptdata);
+
                 try {
                     // If the user wants a flat archive structure, we will store stuff as attempt_1/question_1_response.pdf
                     // or question_1/attempt_1_questiontext.pdf or attempt_1/question_1_attachments/... rather than
@@ -547,7 +550,6 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                             $header = get_string('response', 'quiz_essaydownload');
                         }
 
-                        $fullname = $this->build_fullname($attemptdata);
                         $pdfcontent = $this->generate_pdf(
                             self::OUTPUT_RESPONSE,
                             $this->add_statistics_if_requested($questiondetails['responsetext'], FORMAT_HTML),
@@ -581,7 +583,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                                 self::OUTPUT_QUESTIONTEXT,
                                 $questiondetails['questiontext'],
                                 get_string('questiontext', 'question'),
-                                get_string('presentedto', 'quiz_essaydownload', $this->build_fullname($attemptdata)),
+                                get_string('presentedto', 'quiz_essaydownload', $fullname),
                                 '',
                                 $shipout,
                             );

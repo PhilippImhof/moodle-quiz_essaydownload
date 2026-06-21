@@ -15,19 +15,24 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Moodle quiz_essaydownload plugin version information.
+ * Upgrade functions for quiz_essaydownload.
  *
  * @package   quiz_essaydownload
- * @copyright 2024 Philipp E. Imhof
- * @author    Philipp E. Imhof
- * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2026 University of Bayreuth
+ * @author    Nikolai Jahreis
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Define upgrade steps to be performed to upgrade the plugin from the old version to the current one.
+ *
+ * @param int $oldversion Version number the plugin is being upgraded from.
+ */
+function xmldb_quiz_essaydownload_upgrade($oldversion) {
+    if ($oldversion < 2026042000) {
+        quiz_essaydownload\upgrade::nameordering_to_template();
+        upgrade_plugin_savepoint(true, 2026042000, 'quiz', 'essaydownload');
+    }
 
-$plugin->version   = 2026042000;
-$plugin->requires  = 2022112800;
-$plugin->supported = [401, 501];
-$plugin->component = 'quiz_essaydownload';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.6.4';
+    return true;
+}

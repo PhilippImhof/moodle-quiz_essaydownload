@@ -64,6 +64,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
     /** @var int */
     const OUTPUT_RESPONSE = 2;
 
+    /** @var array placeholders for name and filename strings */
+    const PLACEHOLDERS = ['%firstname%', '%lastname%', '%userid%', '%idnumber%', '%username%'];
+
     /** @var object course object */
     protected object $course;
 
@@ -256,7 +259,10 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             $filteroneattempt = '1 = 1';
         }
 
-        $sql = "SELECT DISTINCT a.id attemptid, a.timefinish, u.firstname, u.lastname
+        // Note: As we are going to re-use this data for the replacement of placeholders, the first and last name,
+        // the userid, the idnumber and the username should be selected in that order and as the first five fields
+        // right after the a.id attemptid column. We need that one as the very first column, because it is unique.
+        $sql = "SELECT DISTINCT a.id attemptid, u.firstname, u.lastname, a.userid, u.idnumber, u.username, a.timefinish
                            FROM {quiz_attempts} a
                       LEFT JOIN {user} u ON a.userid = u.id
                                 $joins->joins
@@ -270,9 +276,16 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         $results = $DB->get_records_sql($sql, ['quizid' => $this->quiz->id] + $joins->params);
 
         $attempts = [];
+        $filenametemplate = $this->options->filenametemplate;
+        // We add a dummy placeholder for the attempt id, because that will be the very first column
+        // in our data array. The placeholder cannot be used for replacement.
+        $placeholders = ['%attemptid%', ...self::PLACEHOLDERS];
         foreach ($results as $result) {
             $attempts[$result->attemptid]['firstname'] = $result->firstname;
             $attempts[$result->attemptid]['lastname'] = $result->lastname;
+            $attempts[$result->attemptid]['userid'] = $result->userid;
+            $attempts[$result->attemptid]['idnumber'] = $result->idnumber;
+            $attempts[$result->attemptid]['username'] = $result->username;
 
             // If the user has requested short filenames, we limit the last and first name to 40
             // characters each.
@@ -281,15 +294,10 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $result->firstname = substr($result->firstname, 0, 40);
             }
 
-            // The user can choose whether to start with the first name or the last name.
-            if ($this->options->nameordering === 'firstlast') {
-                $name = $result->firstname . '_' . $result->lastname;
-            } else {
-                $name = $result->lastname . '_' . $result->firstname;
-            }
+            $filename = str_replace($placeholders, get_object_vars($result), $filenametemplate);
 
             // Build the path for this attempt: <name>_<attemptid>_<date/time finished>.
-            $path = $name . '_' . $result->attemptid;
+            $path = $filename . '_' . $result->attemptid;
             $path = $path . '_' .  date('Ymd_His', $result->timefinish);
             $path = self::clean_filename($path);
 
@@ -523,12 +531,8 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 // "allquestions" path component.
                 $groupedpath = strstr($path, '/', true) . '_allquestions_';
 
-                // Build the full name according to user setting.
-                if ($this->options->nameordering === 'firstlast') {
-                    $fullname = $attemptdata['firstname'] . ' ' . $attemptdata['lastname'];
-                } else {
-                    $fullname = $attemptdata['lastname'] . ' ' . $attemptdata['firstname'];
-                }
+                // Format fullname according to user's template.
+                $fullname = $this->build_fullname($attemptdata);
 
                 try {
                     // If the user wants a flat archive structure, we will store stuff as attempt_1/question_1_response.pdf
@@ -661,6 +665,17 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
      */
     protected static function clean_filename(string $filename): string {
         return clean_filename(str_replace(' ', '_', $filename));
+    }
+
+    /**
+     * Build the student's full name (plus some additional data, if requested) to be put on the page's
+     * header, according to the name template set by the user.
+     *
+     * @param array $attemptdata
+     * @return string
+     */
+    protected function build_fullname(array $attemptdata): string {
+        return str_replace(self::PLACEHOLDERS, $attemptdata, $this->options->nametemplate);
     }
 
     /**

@@ -86,6 +86,34 @@ Feature: Validation and display of the form
     And I wait until the page is ready
     Then I should see "Font size should be an integer between 6 and 50."
 
+  Scenario: Invalid filename template should lead to an error
+    When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    And I set the field "filenametemplate" to "%foobar% %lastname% %firstname%"
+    And I press "Download"
+    And I wait until the page is ready
+    Then I should see "Invalid template. The template must contain at least one placeholder and no other placeholders than the following: %firstname%, %lastname%, %userid%, %idnumber%, %username%."
+
+  Scenario: Empty filename template should lead to an error
+    When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    And I set the field "filenametemplate" to ""
+    And I press "Download"
+    And I wait until the page is ready
+    Then I should see "Invalid template. The template must contain at least one placeholder and no other placeholders than the following: %firstname%, %lastname%, %userid%, %idnumber%, %username%."
+
+  Scenario: Invalid name template should lead to an error
+    When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    And I set the field "nametemplate" to "%foobar% %lastname% %firstname%"
+    And I press "Download"
+    And I wait until the page is ready
+    Then I should see "Invalid template. The template must contain at least one placeholder and no other placeholders than the following: %firstname%, %lastname%, %userid%, %idnumber%, %username%."
+
+  Scenario: Empty name template should lead to an error
+    When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    And I set the field "nametemplate" to ""
+    And I press "Download"
+    And I wait until the page is ready
+    Then I should see "Invalid template. The template must contain at least one placeholder and no other placeholders than the following: %firstname%, %lastname%, %userid%, %idnumber%, %username%."
+
   Scenario: PDF specific fields should be disabled if output set to TXT
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
     When I set the field "fileformat" to "txt"

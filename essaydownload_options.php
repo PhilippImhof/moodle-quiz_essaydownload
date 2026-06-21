@@ -93,8 +93,11 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
     /** @var int top margin for PDF export */
     public $margintop = 20;
 
-    /** @var string whether to have the last name or the first name first */
-    public $nameordering = 'lastfirst';
+    /** @var string template for the name printed in the resulting file */
+    public $nametemplate = '%lastname% %firstname%';
+
+    /** @var string template for the name printed in the resulting file */
+    public $filenametemplate = '%lastname%_%firstname%';
 
     /** @var string page format for PDF export */
     public $pageformat = 'a4';
@@ -146,7 +149,8 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $toform->marginleft = $this->marginleft;
         $toform->marginright = $this->marginright;
         $toform->margintop = $this->margintop;
-        $toform->nameordering = $this->nameordering;
+        $toform->nametemplate = $this->nametemplate;
+        $toform->filenametemplate = $this->filenametemplate;
         $toform->pageformat = $this->pageformat;
         $toform->questiontext = $this->questiontext;
         $toform->shortennames = $this->shortennames;
@@ -178,7 +182,8 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->marginleft = $fromform->marginleft ?? '';
         $this->marginright = $fromform->marginright ?? '';
         $this->margintop = $fromform->margintop ?? '';
-        $this->nameordering = $fromform->nameordering;
+        $this->nametemplate = $fromform->nametemplate;
+        $this->filenametemplate = $fromform->filenametemplate;
         $this->pageformat = $fromform->pageformat ?? '';
         $this->questiontext = $fromform->questiontext;
         $this->shortennames = $fromform->shortennames;
@@ -206,7 +211,8 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->marginleft = optional_param('marginleft', $this->marginleft, PARAM_INT);
         $this->marginright = optional_param('marginright', $this->marginright, PARAM_INT);
         $this->margintop = optional_param('margintop', $this->margintop, PARAM_INT);
-        $this->nameordering = optional_param('nameordering', $this->nameordering, PARAM_ALPHA);
+        $this->nametemplate = optional_param('nametemplate', $this->nametemplate, PARAM_RAW);
+        $this->filenametemplate = optional_param('filenametemplate', $this->filenametemplate, PARAM_RAW);
         $this->pageformat = optional_param('pageformat', $this->pageformat, PARAM_ALPHA);
         $this->questiontext = optional_param('questiontext', $this->questiontext, PARAM_BOOL);
         $this->shortennames = optional_param('shortennames', $this->shortennames, PARAM_BOOL);
@@ -234,7 +240,8 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         $this->marginleft = get_user_preferences('quiz_essaydownload_marginleft', $this->marginleft);
         $this->marginright = get_user_preferences('quiz_essaydownload_marginright', $this->marginright);
         $this->margintop = get_user_preferences('quiz_essaydownload_margintop', $this->margintop);
-        $this->nameordering = get_user_preferences('quiz_essaydownload_nameordering', $this->nameordering);
+        $this->nametemplate = get_user_preferences('quiz_essaydownload_nametemplate', $this->nametemplate);
+        $this->filenametemplate = get_user_preferences('quiz_essaydownload_filenametemplate', $this->filenametemplate);
         $this->pageformat = get_user_preferences('quiz_essaydownload_pageformat', $this->pageformat);
         $this->questiontext = get_user_preferences('quiz_essaydownload_questiontext', $this->questiontext);
         $this->shortennames = get_user_preferences('quiz_essaydownload_shortennames', $this->shortennames);
@@ -250,7 +257,8 @@ class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class
         set_user_preference('quiz_essaydownload_flatarchive', $this->flatarchive);
         set_user_preference('quiz_essaydownload_groupby', $this->groupby);
         set_user_preference('quiz_essaydownload_includestats', $this->includestats);
-        set_user_preference('quiz_essaydownload_nameordering', $this->nameordering);
+        set_user_preference('quiz_essaydownload_nametemplate', $this->nametemplate);
+        set_user_preference('quiz_essaydownload_filenametemplate', $this->filenametemplate);
         set_user_preference('quiz_essaydownload_questiontext', $this->questiontext);
         set_user_preference('quiz_essaydownload_shortennames', $this->shortennames);
 

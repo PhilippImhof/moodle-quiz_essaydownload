@@ -113,15 +113,20 @@ class quiz_essaydownload_form extends moodleform {
         }
 
         $mform->addElement(
-            'select',
-            'nameordering',
-            get_string('nameordering', 'quiz_essaydownload'),
-            [
-                'lastfirst' => get_string('lastfirst', 'quiz_essaydownload'),
-                'firstlast' => get_string('firstlast', 'quiz_essaydownload'),
-            ]
+            'text',
+            'filenametemplate',
+            get_string('filenametemplate', 'quiz_essaydownload'),
         );
-        $mform->setType('nameordering', PARAM_ALPHA);
+        $mform->setType('filenametemplate', PARAM_RAW);
+        $mform->addHelpButton('filenametemplate', 'filenametemplate', 'quiz_essaydownload');
+
+        $mform->addElement(
+            'text',
+            'nametemplate',
+            get_string('nametemplate', 'quiz_essaydownload'),
+        );
+        $mform->setType('nametemplate', PARAM_RAW);
+        $mform->addHelpButton('nametemplate', 'nametemplate', 'quiz_essaydownload');
 
         $mform->addElement(
             'advcheckbox',
@@ -261,9 +266,19 @@ class quiz_essaydownload_form extends moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
+        // Checks on provided filename template.
+        if (!self::is_valid_template($data['filenametemplate'])) {
+            $errors['filenametemplate'] = get_string('errorinvalidtemplate', 'quiz_essaydownload');
+        }
+
         // No further validation to be done if using plain text format.
         if ($data['fileformat'] === 'txt') {
             return $errors;
+        }
+
+        // Checks on provided name template.
+        if (!self::is_valid_template($data['nametemplate'])) {
+            $errors['nametemplate'] = get_string('errorinvalidtemplate', 'quiz_essaydownload');
         }
 
         $margins = [$data['marginleft'], $data['marginright'], $data['margintop'], $data['marginbottom']];
@@ -278,5 +293,34 @@ class quiz_essaydownload_form extends moodleform {
         }
 
         return $errors;
+    }
+    /**
+     * Check if a template string only contains valid placeholders.
+     *
+     * @param string $template the template to check
+     * @return bool
+     */
+    protected static function is_valid_template(string $template): bool {
+        // Template must not be empty.
+        if (empty(trim($template))) {
+            return false;
+        }
+
+        preg_match_all('/%([^%]+)%/', $template, $tokens);
+        $placeholders = array_unique($tokens[0]);
+
+        // There must be at least one valid placeholder.
+        if (empty($placeholders)) {
+            return false;
+        }
+
+        // Make sure we only have valid placeholders.
+        foreach ($placeholders as $placeholder) {
+            if (!in_array($placeholder, quiz_essaydownload_report::PLACEHOLDERS)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

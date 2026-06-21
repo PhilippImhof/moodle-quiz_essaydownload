@@ -171,10 +171,30 @@ class quiz_essaydownload_test_helper {
      */
     public static function add_students(\stdClass $course): array {
         $names = [
-            ['firstname' => 'John L.', 'lastname' => 'Doe'],
-            ['firstname' => 'Jean', 'lastname' => 'D\'La Fontaine'],
-            ['firstname' => 'Hans-Peter', 'lastname' => 'Müller'],
-            ['firstname' => 'Little', 'lastname' => 'Bobby/Tables'],
+            [
+                'firstname' => 'John L.',
+                'lastname' => 'Doe',
+                'username' => 'jdoe',
+                'idnumber' => 'u1001',
+            ],
+            [
+                'firstname' => 'Jean',
+                'lastname' => 'D\'La Fontaine',
+                'username' => 'jdlafontaine',
+                'idnumber' => 'u1002',
+            ],
+            [
+                'firstname' => 'Hans-Peter',
+                'lastname' => 'Müller',
+                'username' => 'hpmueller',
+                'idnumber' => 'u1003',
+            ],
+            [
+                'firstname' => 'Little',
+                'lastname' => 'Bobby/Tables',
+                'username' => 'btables',
+                'idnumber' => 'u1004',
+            ],
         ];
         $students = [];
         foreach ($names as $i => $name) {

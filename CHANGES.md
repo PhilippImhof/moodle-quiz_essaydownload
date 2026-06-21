@@ -1,5 +1,12 @@
 # Changelog
 
+### 1.6.5 (2026-06-21)
+
+- improvement: allow customising of filename and name format
+- assure compatibility with Moodle 5.1
+
+Thanks to Nikolai Jahreis (@NJahreis), University of Bayreuth for the contribution.
+
 ### 1.6.4 (2025-12-11)
 
 - bugfix: exporting all answers in one PDF per attempt now working even if

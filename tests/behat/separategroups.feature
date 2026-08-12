@@ -9,7 +9,9 @@ Feature: Correct handling of groups
       | username | firstname | lastname |
       | teacher1 | T1        | Teacher1 |
       | teacher2 | T2        | Teacher2 |
-      | teacher3 | T3        | Teacher2 |
+      | teacher3 | T3        | Teacher3 |
+      | teacher4 | T4        | Teacher4 |
+      | teacher5 | T5        | Teacher5 |
       | student1 | S1        | Student1 |
       | student2 | S2        | Student2 |
       | student3 | S3        | Student3 |
@@ -19,6 +21,8 @@ Feature: Correct handling of groups
       | teacher1 | C1     | editingteacher |
       | teacher2 | C1     | teacher        |
       | teacher3 | C1     | teacher        |
+      | teacher4 | C1     | teacher        |
+      | teacher5 | C1     | teacher        |
       | student1 | C1     | student        |
       | student2 | C1     | student        |
       | student3 | C1     | student        |
@@ -92,6 +96,25 @@ Feature: Correct handling of groups
     When I set the field "group" to "group2"
     Then I should see "Attempts: 3 (2 from this group)"
     # And following "Download" should download between "930" and "960" bytes
+
+  Scenario: A (non-editing) teacher that is part of no groups should not have access.
+    When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher4"
+    Then I should see "Separate groups"
+    And "group" "field" should not exist
+    And I should see "Attempts: 3 "
+    And I should see "Sorry, but you need to be part of a group to see this page."
+
+  Scenario: A (non-editing) teacher that is part of no groups, but has additional privilege, should see students.
+    Given the following "permission overrides" exist:
+      | capability                  | permission | role    | contextlevel | reference |
+      | moodle/site:accessallgroups | Allow      | teacher | Course       | C1        |
+    When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher5"
+    Then I should see "Separate groups"
+    And "group" "field" should exist
+    And I should see "Attempts: 3 (1 from this group)"
+    When I set the field "group" to "group2"
+    Then I should see "Attempts: 3 (2 from this group)"
+    And the "group" select box should contain "group3"
 
   Scenario: If there are students in a group, but none attempted the quiz, the user should see a notification.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"

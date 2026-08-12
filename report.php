@@ -192,6 +192,15 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             return;
         }
 
+        // Similarly, if the user does not have access to any groups, we tweak the output a bit,
+        // because, by default, they would see a notification and the download form, which does not
+        // make sense.
+        if ($this->currentgroup === self::NO_GROUPS_ALLOWED) {
+            $this->currentgroup = 0;
+            $this->notification(get_string('notingroup'));
+            return;
+        }
+
         // Printing the standard header. We'll set $hasquestions and $hasstudents to true here,
         // because otherwise the header will include a notification by itself.
         $this->print_standard_header_and_messages(

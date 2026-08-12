@@ -107,9 +107,14 @@ Feature: Correct handling of groups
       | capability                  | permission | role    | contextlevel | reference |
       | moodle/site:accessallgroups | Allow      | teacher | Course       | C1        |
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher4"
-    Then I should see "Separate groups: All participants"
-    And "group" "field" should not exist
+    And I should see "Separate groups"
     And I should see "Attempts: 3"
+    And "group" "field" should exist
+    And the "group" select box should contain "group1"
+    And the "group" select box should contain "group2"
+    And the "group" select box should contain "group3"
+    When I set the field "group" to "group3"
+    Then I should see "Attempts: 3 (1 from this group)"
 
   Scenario: If there are students in a group, but none attempted the quiz, the user should see a notification.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"

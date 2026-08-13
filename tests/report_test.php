@@ -553,6 +553,61 @@ final class report_test extends \advanced_testcase {
         self::assertCount(3, $fetchedattempts);
     }
 
+    public function test_non_editing_teacher_cannot_access_students_unless_allowed_to(): void {
+        $this->resetAfterTest();
+
+        // Create a course and a quiz with an essay question. The quiz is configured to have
+        // separate groups.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quizgenerator = $generator->get_plugin_generator('mod_quiz');
+        $quiz = $quizgenerator->create_instance(['course' => $course->id, 'sumgrades' => 2, 'groupmode' => SEPARATEGROUPS]);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz);
+
+        // Add some students and attempts.
+        $students = quiz_essaydownload_test_helper::add_students($course);
+        foreach ($students as $student) {
+            $attempts[] = $this->attempt_quiz($quiz, $student);
+        }
+
+        // Add the students to different groups. Taking the second student for group 1 and the
+        // others for group 2.
+        $group1 = $generator->create_group(['courseid' => $course->id]);
+        $group2 = $generator->create_group(['courseid' => $course->id]);
+        $generator->create_group_member(['groupid' => $group1->id, 'userid' => $students[1]->id]);
+        for ($i = 0; $i < count($students); $i++) {
+            if ($i == 1) {
+                continue;
+            }
+            $generator->create_group_member(['groupid' => $group2->id, 'userid' => $students[$i]->id]);
+        }
+
+        // Add a (non-editing) teacher, member of no group and not having the site:accessallgroups
+        // permission. They should not get any attempts.
+        $teacher = $generator->create_user();
+        $generator->enrol_user($teacher->id, $course->id, 'teacher');
+        $this->setUser($teacher);
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        self::assertEmpty($fetchedattempts);
+
+        // Now grant the site:accessallgroups permission to the teacher. They should get all
+        // attempts, because they are not part of any group.
+        $context = \context_course::instance($course->id);
+        $roles = get_user_roles($context);
+        $role = reset($roles);
+        assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $role->roleid, $context->id);
+        $report = new quiz_essaydownload_report();
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        self::assertCount(4, $fetchedattempts);
+    }
+
     public function test_get_attempts_and_names_with_unfinished_attempt(): void {
         $this->resetAfterTest();
 

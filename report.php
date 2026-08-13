@@ -254,6 +254,11 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
     public function get_attempts_and_names(sql_join $joins): array {
         global $DB;
 
+        // Return an empty array if the user is not allowed to access any groups.
+        if ($this->currentgroup === self::NO_GROUPS_ALLOWED) {
+            return [];
+        }
+
         // If there are no WHERE clauses (i. e. because no group has been selected), we add a dummy
         // clause to simplify the syntax of the query.
         if (empty($joins->wheres)) {

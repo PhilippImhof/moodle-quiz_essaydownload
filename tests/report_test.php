@@ -554,6 +554,7 @@ final class report_test extends \advanced_testcase {
     }
 
     public function test_non_editing_teacher_cannot_access_students_unless_allowed_to(): void {
+        global $DB;
         $this->resetAfterTest();
 
         // Create a course and a quiz with an essay question. The quiz is configured to have
@@ -598,9 +599,8 @@ final class report_test extends \advanced_testcase {
         // Now grant the site:accessallgroups permission to the teacher. They should get all
         // attempts, because they are not part of any group.
         $context = \context_course::instance($course->id);
-        $roles = get_user_roles($context);
-        $role = reset($roles);
-        assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $role->roleid, $context->id);
+        $role = $DB->get_record('role', ['shortname' => 'teacher']);
+        assign_capability('moodle/site:accessallgroups', CAP_ALLOW, $role->id, $context->id);
         $report = new quiz_essaydownload_report();
         [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
             $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);

@@ -26,6 +26,8 @@
 use core_files\archive_writer;
 use core\dml\sql_join;
 use quiz_essaydownload\customTCPDF;
+use quiz_essaydownload\event\responses_downloaded;
+use quiz_essaydownload\event\responses_downloadfailed;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -640,10 +642,77 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         // to send the user an empty file.
         if ($emptyarchive) {
             $this->notification(get_string('nothingtodownload', 'quiz_essaydownload'));
+            $this->log(false);
         } else {
             $zipwriter->finish();
+            $this->log(true);
             exit();
         }
+    }
+
+    /**
+     * Trigger the corresponding event after a successful download (rather: creation of the ZIP archive)
+     * or after a failure, e. g. because the ZIP file was empty.
+     *
+     * @param bool $success whether the download was successful or not
+     * @return void
+     */
+    protected function log(bool $success): void {
+        // Setting the default parameters used for logging success or failure.
+        $params = [
+            'context' => $this->quizobj->get_context(),
+            'other' => ['quizid' => $this->quiz->id],
+        ];
+
+        // If the download failed, trigger the corresponding event and leave.
+        if (!$success) {
+            $event = responses_downloadfailed::create($params);
+            $event->trigger();
+            return;
+        }
+
+        // If we're still here, we are logging a successful download. Prepare the details,
+        // starting with the group name.
+        if ($this->currentgroup === 0) {
+            $groupname = get_string('allparticipants');
+        } else {
+            $group = groups_get_group($this->currentgroup);
+            $groupname = 'unknown';
+            if ($group !== false) {
+                $groupname = $group->name;
+            }
+        }
+
+        // The log entry should also include the source and the output format.
+        $sources = [
+            'plain' => get_string('sourcesummary', 'quiz_essaydownload'),
+            'html' => get_string('sourceoriginal', 'quiz_essaydownload'),
+        ];
+        $outputformats = [
+            'txt' => get_string('fileformattxt', 'quiz_essaydownload'),
+            'pdf' => get_string('fileformatpdf', 'quiz_essaydownload'),
+        ];
+
+        // Finally, we need to check for the attempts included. Depending on the configuration, the
+        // archive will include all attempts for each user or only one, i. e. the first, the last or
+        // the one with the highest grade. Note that the user cannot select to export only one attempt,
+        // if the grading method is set to "average".
+        $attempts = 'all';
+        if ($this->options->onlyone) {
+            $attempts = quiz_get_grading_option_name($this->quiz->grademethod);
+        }
+
+        // Finally, prepare and trigger our event.
+        $params['other'] += [
+            'group' => $groupname,
+            'attachments' => $this->options->attachments ? 'included' : 'not included',
+            'questiontext' => $this->options->questiontext ? 'included' : 'not included',
+            'outputformat' => $outputformats[$this->options->fileformat],
+            'source' => $sources[$this->options->source],
+            'attempts' => $attempts,
+        ];
+        $event = responses_downloaded::create($params);
+        $event->trigger();
     }
 
     /**

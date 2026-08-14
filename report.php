@@ -254,7 +254,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
     public function get_attempts_and_names(sql_join $joins): array {
         global $DB;
 
-        // Return an empty array if the user is not allowed to access any groups.
+        // Return an empty array if the user is not allowed to access any groups. This can happen, if a non-editing
+        // teacher that is not part of any groups and does not have permission to access other groups tries to bypass
+        // the user interface by sending a direct POST request.
         if ($this->currentgroup === self::NO_GROUPS_ALLOWED) {
             return [];
         }

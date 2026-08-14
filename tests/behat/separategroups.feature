@@ -101,6 +101,7 @@ Feature: Correct handling of groups
     And "group" "field" should not exist
     And I should see "Attempts: 3"
     And I should see "Sorry, but you need to be part of a group to see this page."
+    And I should not see "Nothing to download"
 
   Scenario: A (non-editing) teacher that is part of no groups, but has additional privilege, should see students.
     Given the following "permission overrides" exist:

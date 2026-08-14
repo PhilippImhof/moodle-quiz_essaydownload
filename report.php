@@ -182,6 +182,15 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             return;
         }
 
+        // If the user does not have access to any groups, we tweak the output a bit,
+        // because, by default, they would see a notification and the download form, which does not
+        // make sense.
+        if ($this->currentgroup === self::NO_GROUPS_ALLOWED) {
+            $this->currentgroup = 0;
+            $this->notification(get_string('notingroup'));
+            return;
+        }
+
         // If $hasgroupstudents is false, the header would automatically include a
         // notification, so we pretend to have group students and show our notification instead.
         if (empty($this->attempts)) {
@@ -189,15 +198,6 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $this->hasgroupstudents = true;
             }
             $this->notification(get_string('nothingtodownload', 'quiz_essaydownload'));
-            return;
-        }
-
-        // Similarly, if the user does not have access to any groups, we tweak the output a bit,
-        // because, by default, they would see a notification and the download form, which does not
-        // make sense.
-        if ($this->currentgroup === self::NO_GROUPS_ALLOWED) {
-            $this->currentgroup = 0;
-            $this->notification(get_string('notingroup'));
             return;
         }
 
@@ -640,6 +640,8 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         // to send the user an empty file.
         if ($emptyarchive) {
             $this->notification(get_string('nothingtodownload', 'quiz_essaydownload'));
+            if ($this->currentgroup !== self::NO_GROUPS_ALLOWED) {
+            }
         } else {
             $zipwriter->finish();
             exit();

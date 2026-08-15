@@ -182,6 +182,15 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             return;
         }
 
+        // If the user does not have access to any groups, we tweak the output a bit,
+        // because, by default, they would see a notification and the download form, which does not
+        // make sense.
+        if ($this->currentgroup === self::NO_GROUPS_ALLOWED) {
+            $this->currentgroup = 0;
+            $this->notification(get_string('notingroup'));
+            return;
+        }
+
         // If $hasgroupstudents is false, the header would automatically include a
         // notification, so we pretend to have group students and show our notification instead.
         if (empty($this->attempts)) {
@@ -189,15 +198,6 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $this->hasgroupstudents = true;
             }
             $this->notification(get_string('nothingtodownload', 'quiz_essaydownload'));
-            return;
-        }
-
-        // Similarly, if the user does not have access to any groups, we tweak the output a bit,
-        // because, by default, they would see a notification and the download form, which does not
-        // make sense.
-        if ($this->currentgroup === self::NO_GROUPS_ALLOWED) {
-            $this->currentgroup = 0;
-            $this->notification(get_string('notingroup'));
             return;
         }
 
@@ -253,6 +253,13 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
      */
     public function get_attempts_and_names(sql_join $joins): array {
         global $DB;
+
+        // Return an empty array if the user is not allowed to access any groups. This can happen, if a non-editing
+        // teacher that is not part of any groups and does not have permission to access other groups tries to bypass
+        // the user interface by sending a direct POST request.
+        if ($this->currentgroup === self::NO_GROUPS_ALLOWED) {
+            return [];
+        }
 
         // If there are no WHERE clauses (i. e. because no group has been selected), we add a dummy
         // clause to simplify the syntax of the query.

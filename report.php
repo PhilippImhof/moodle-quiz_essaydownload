@@ -640,8 +640,6 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         // to send the user an empty file.
         if ($emptyarchive) {
             $this->notification(get_string('nothingtodownload', 'quiz_essaydownload'));
-            if ($this->currentgroup !== self::NO_GROUPS_ALLOWED) {
-            }
         } else {
             $zipwriter->finish();
             exit();

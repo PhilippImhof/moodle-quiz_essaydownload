@@ -1479,4 +1479,195 @@ final class report_test extends \advanced_testcase {
         self::assertNull($e);
         self::assertLessThan($pdfsize, 0.8 * strlen($pdfoutput));
     }
+
+    public function test_failure_is_logged(): void {
+        global $USER;
+        $this->resetAfterTest();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz);
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        $sink = $this->redirectEvents();
+        // Trigger the event using reflection.
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedmethod = $reflectedreport->getMethod('log');
+        $reflectedmethod->setAccessible(true);
+        $reflectedmethod->invoke($report, false);
+
+        // Fetch the events and close the sink.
+        $events = $sink->get_events();
+        $sink->close();
+
+        // Check count.
+        self::assertCount(1, $events);
+
+        // Check it is our event.
+        $event = reset($events);
+        self::assertInstanceOf(
+            \quiz_essaydownload\event\responses_downloadfailed::class,
+            $event
+        );
+
+        // Check details.
+        $data = $event->get_data();
+        $other = $data['other'];
+        self::assertEquals($USER->id, $data['userid']);
+        self::assertEquals($course->id, $data['courseid']);
+        self::assertEquals($quiz->id, $other['quizid']);
+    }
+
+    /**
+     * Data provider.
+     *
+     * @return Generator
+     */
+    public static function provide_settings_for_logger_test(): Generator {
+        yield [['in the format Plain-text (TXT)'], ['fileformat' => 'txt']];
+        yield [['in the format Portable Document Format (PDF)'], ['fileformat' => 'pdf']];
+        yield [['download essay responses (Plain-text summary)'], ['source' => 'plain']];
+        yield [['download essay responses (Original HTML formatted text)'], ['source' => 'html']];
+        yield [['Attachments included,'], ['attachments' => true]];
+        yield [['Attachments not included,'], ['attachments' => false]];
+        yield [['question text included.'], ['questiontext' => true]];
+        yield [['question text not included.'], ['questiontext' => false]];
+        yield [['The export contains the following attempts per user: all.'], ['onlyone' => false]];
+    }
+
+    /**
+     * Test logging of successful downloads.
+     *
+     * @dataProvider provide_settings_for_logger_test
+     *
+     * @param string $expected expected text fragments that must appear in the log entry
+     * @param string $settings the option(s) to change from the default settings
+     * @return void
+     */
+    public function test_success_is_logged($expected, $settings): void {
+        global $USER;
+        $this->resetAfterTest();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz);
+
+        // Add a student and create an attempt.
+        $student = \phpunit_util::get_data_generator()->create_user();
+        \phpunit_util::get_data_generator()->enrol_user($student->id, $course->id, 'student');
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Use reflection to force shortening of names.
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedoptions = $reflectedreport->getProperty('options');
+        $reflectedoptions->setAccessible(true);
+        $options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
+        foreach ($settings as $setting => $value) {
+            $options->$setting = $value;
+        }
+        $reflectedoptions->setValue($report, $options);
+
+        $sink = $this->redirectEvents();
+        // Trigger the event.
+        $reflectedmethod = $reflectedreport->getMethod('log');
+        $reflectedmethod->setAccessible(true);
+        $reflectedmethod->invoke($report, true);
+
+        // Fetch the events and close the sink.
+        $events = $sink->get_events();
+        $sink->close();
+
+        // Check count.
+        self::assertCount(1, $events);
+
+        // Check it is our event.
+        $event = reset($events);
+        self::assertInstanceOf(
+            \quiz_essaydownload\event\responses_downloaded::class,
+            $event
+        );
+
+        // Check details.
+        $data = $event->get_data();
+        $other = $data['other'];
+        $description = $event->get_description();
+        self::assertEquals($USER->id, $data['userid']);
+        self::assertEquals($course->id, $data['courseid']);
+        self::assertEquals($quiz->id, $other['quizid']);
+
+        self::assertStringContainsString('Group scope: All participants', $description);
+        foreach ($expected as $fragment) {
+            self::assertStringContainsString($fragment, $description);
+        }
+    }
+
+    public function test_success_is_logged_with_group_scope(): void {
+        global $USER;
+        $this->resetAfterTest();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quizgenerator = $generator->get_plugin_generator('mod_quiz');
+        $quiz = $quizgenerator->create_instance(['course' => $course->id, 'sumgrades' => 2, 'groupmode' => SEPARATEGROUPS]);
+        quiz_essaydownload_test_helper::add_essay_question($questiongenerator, $quiz);
+
+        // Add a student and a teacher.
+        $student = \phpunit_util::get_data_generator()->create_user();
+        \phpunit_util::get_data_generator()->enrol_user($student->id, $course->id, 'student');
+        $teacher = $generator->create_user();
+        $generator->enrol_user($teacher->id, $course->id, 'teacher');
+
+        // Add a group for both users.
+        $group = $generator->create_group(['courseid' => $course->id, 'name' => 'mygroup']);
+        $generator->create_group_member(['groupid' => $group->id, 'userid' => $student->id]);
+        $generator->create_group_member(['groupid' => $group->id, 'userid' => $teacher->id]);
+
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        $sink = $this->redirectEvents();
+        // Trigger the event via reflection.
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedmethod = $reflectedreport->getMethod('log');
+        $reflectedmethod->setAccessible(true);
+        $this->setUser($teacher);
+        $reflectedmethod->invoke($report, true);
+
+        // Fetch the events and close the sink.
+        $events = $sink->get_events();
+        $sink->close();
+
+        // Check count.
+        self::assertCount(1, $events);
+
+        // Check it is our event.
+        $event = reset($events);
+        self::assertInstanceOf(
+            \quiz_essaydownload\event\responses_downloaded::class,
+            $event
+        );
+
+        // Check details group scope. (Other details are checked in the general test.)
+        $data = $event->get_data();
+        self::assertEquals($USER->id, $data['userid']);
+        self::assertStringEndsWith('Group scope: mygroup.', $event->get_description());
+    }
 }

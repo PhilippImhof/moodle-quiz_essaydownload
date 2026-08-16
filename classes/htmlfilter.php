@@ -71,10 +71,16 @@ class htmlfilter {
         // Note that LIBXML_NONET is particularly important, because we do not want the parser
         // to access any URLs.
         $dom = new \DOMDocument('1.0', 'UTF-8');
+        // We suppress errors or warnings from the parser, because it might output them for
+        // valid HTML 5 stuff. Storing the previous state here.
+        $previous = libxml_use_internal_errors(true);
         $loaded = $dom->loadHTML(
             $html,
             LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NONET
         );
+        // Clear the errors and reset the error management to its previous state.
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
 
         // If the document could not be loaded (which should not happen), we return an error
         // message.

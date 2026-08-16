@@ -37,10 +37,85 @@ final class htmlfilter_test extends \advanced_testcase {
         yield ['', ''];
         yield ['<p>foo<strong>bar</strong></p>', '<p>foo<strong>bar</strong></p>'];
         yield ['<p><a href="https://www.moodle.org">Moodle</a></p>', '<p><a href="https://www.moodle.org">Moodle</a></p>'];
+        yield ['<p><a href="../../../../etc/passwd">Click me!</a></p>', '<p><a href="../../../../etc/passwd">Click me!</a></p>'];
         yield ['[&lt;img&gt; tag removed]', '<img src="foo.jpg">'];
         yield [
             '<p>[url(...) removed from style attribute of &lt;span&gt; tag]<span style="background-image: none;">foo</span></p>',
             '<p><span style="background-image: url(\'foo.jpg\');">foo</span></p>',
+        ];
+        yield [
+            '<p>[url(...) removed from style attribute of &lt;span&gt; tag]<span style="background-image: none;">foo</span></p>',
+            '<p><span style="background-image: url(https://example.com/foo.png);">foo</span></p>',
+        ];
+        yield [
+            '<p><span style="font-weight: bold; text-align: center">Hello</span></p>',
+            '<p><span style="font-weight: bold; text-align: center">Hello</span></p>',
+        ];
+        yield [
+            '<p>[src attribute removed from &lt;span&gt; tag]<span>Hello</span></p>',
+            '<p><span src="https://example.com/image.png">Hello</span></p>',
+        ];
+        yield [
+            '<p>[srcset attribute removed from &lt;span&gt; tag]<span>Hello</span></p>',
+            '<p><span srcset="https://example.com/image.png">Hello</span></p>',
+        ];
+        yield [
+            '<p>[data attribute removed from &lt;span&gt; tag]<span>Hello</span></p>',
+            '<p><span data="https://example.com/data">Hello</span></p>',
+        ];
+        yield [
+            '<p>Hello [&lt;img&gt; tag removed] world.</p>',
+            '<p>Hello <img src="https://example.com/image.png"> world.</p>',
+        ];
+        yield [
+            '<p>Hello [&lt;img&gt; tag removed] world.</p>',
+            '<p>Hello <img srcset="small.png 1x, large.png 2x"> world.</p>',
+        ];
+        yield [
+            '<p>Hello [&lt;picture&gt; tag removed] world.</p>',
+            '<p>Hello <picture><source srcset="large.webp"><img src="small.png"></picture> world.</p>',
+        ];
+        yield [
+            '<p>Before [&lt;iframe&gt; tag removed] after.</p>',
+            '<p>Before <iframe src="https://moodle.org"></iframe> after.</p>',
+        ];
+        yield [
+            '<p>Before [&lt;object&gt; tag removed] after.</p>',
+            '<p>Before <object data="https://example.com/file.pdf"></object> after.</p>',
+        ];
+        yield [
+            '<p>Before [&lt;embed&gt; tag removed] after.</p>',
+            '<p>Before <embed src="https://example.com/file.swf"></embed> after.</p>',
+        ];
+        yield [
+            '<p>Before [&lt;video&gt; tag removed] after.</p>',
+            '<p>Before <video src="movie.mp4" poster="poster.jpg"><source src="movie.webm"></video> after.</p>',
+        ];
+        yield [
+            '<p>Before [&lt;audio&gt; tag removed] after.</p>',
+            '<p>Before <audio src="sound.mp3"></audio> after.</p>',
+        ];
+        yield [
+            '<p>Before [&lt;track&gt; tag removed] after.</p>',
+            '<p>Before <track src="captions.vtt"></track> after.</p>',
+        ];
+        yield [
+            '<p>Before [&lt;svg&gt; tag removed] after.</p>',
+            '<p>Before <svg><image href="https://example.com/image.png"></image></svg> after.</p>',
+        ];
+        yield [
+            '<p>Before [&lt;svg&gt; tag removed] after.</p>',
+            '<p>Before <svg><use href="https://example.com/icons.svg#foo"></use></svg> after.</p>',
+        ];
+        yield [
+            '<p>One [&lt;img&gt; tag removed] two <a href="https://example.com">link</a> three [&lt;iframe&gt; tag removed] four.</p>',
+            '<p>One <img src="a.png"> two <a href="https://example.com">link</a> three <iframe src="b"></iframe> four.</p>',
+        ];
+        // For the following test, we remove the outer <picture> element with its entire subtree,
+        // so there should be only one notice in the output.
+        yield [
+            '<div>Before [&lt;picture&gt; tag removed] after.</div>',
+            '<div>Before <picture><source src="a.png"><img src="b.png"></picture> after.</div>',
         ];
     }
 
@@ -53,8 +128,13 @@ final class htmlfilter_test extends \advanced_testcase {
      * @dataProvider provide_html_input
      */
     public function test_filtering(string $expected, string $input): void {
-        $expected = format_text($expected, FORMAT_HTML);
-        $input = format_text($input, FORMAT_HTML);
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $loaded = $dom->loadHTML(
+            '<p>Before <embed src="https://example.com/file.swf"> after.</p>',
+            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NONET
+        );
+        //echo $dom->saveHTML();
+
         $output = trim(htmlfilter::remove_embedded_stuff($input));
         self::assertEquals($expected, $output);
     }

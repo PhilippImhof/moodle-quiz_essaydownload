@@ -686,7 +686,7 @@ final class report_test extends \advanced_testcase {
         foreach ($details as $label => $detail) {
             self::assertEquals('Question_1_-_My_Question_Title__Test', $label);
             self::assertEquals('Go write your stuff!', trim($detail['questiontext']));
-            self::assertEquals('Here we go.', trim($detail['responsetext']));
+            self::assertEquals('<p>Here we go.</p>', trim($detail['responsetext']));
             self::assertEmpty($detail['attachments']);
         }
     }
@@ -749,7 +749,7 @@ final class report_test extends \advanced_testcase {
             $cleanedname = clean_filename(str_replace(' ', '_', $questionsandanswers[$i]['name']));
             self::assertEquals('Question_' . $i . '_-_' . $cleanedname, $label);
             self::assertEquals($questionsandanswers[$i]['text'], $detail['questiontext']);
-            self::assertEquals($questionsandanswers[$i]['response'], trim($detail['responsetext']));
+            self::assertEquals('<p>' . $questionsandanswers[$i]['response'] . '</p>', trim($detail['responsetext']));
             self::assertEmpty($detail['attachments']);
             $i++;
         }
@@ -806,7 +806,7 @@ final class report_test extends \advanced_testcase {
         foreach ($details as $label => $detail) {
             self::assertEquals('Question_3_-_My_Question_Title__Test', $label);
             self::assertEquals('Go write your stuff!', trim($detail['questiontext']));
-            self::assertEquals('Here we go.', trim($detail['responsetext']));
+            self::assertEquals('<p>Here we go.</p>', trim($detail['responsetext']));
             self::assertEmpty($detail['attachments']);
         }
     }
@@ -895,7 +895,7 @@ final class report_test extends \advanced_testcase {
         foreach ($details as $label => $detail) {
             self::assertEquals('Question_1_-_Essay_question_(HTML_editor)', $label);
             self::assertEquals('Please write a story about a frog.', trim($detail['questiontext']));
-            self::assertEquals('Foo Bar Quak.', trim($detail['responsetext']));
+            self::assertEquals('<p>Foo Bar Quak.</p>', trim($detail['responsetext']));
             self::assertEmpty($detail['attachments']);
         }
     }
@@ -1200,7 +1200,7 @@ final class report_test extends \advanced_testcase {
         foreach ($details as $label => $detail) {
             self::assertEquals('Question_1_-_My_Question_Title__Test', $label);
             self::assertEquals('<p>Go write <strong>your</strong> stuff!</p>', trim($detail['questiontext']));
-            self::assertStringStartsWith("Here<br />\nwe<br />\ngo.", $detail['responsetext']);
+            self::assertStringStartsWith("<p>Here<br>\nwe<br>\ngo.</p>", $detail['responsetext']);
             self::assertCount(0, $detail['attachments']);
         }
     }

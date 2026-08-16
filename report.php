@@ -28,6 +28,7 @@ use core\dml\sql_join;
 use quiz_essaydownload\customTCPDF;
 use quiz_essaydownload\event\responses_downloaded;
 use quiz_essaydownload\event\responses_downloadfailed;
+use quiz_essaydownload\htmlfilter;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -382,6 +383,8 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                     $qa->get_last_qt_var('answerformat', FORMAT_PLAIN),
                     $formattingoptions
                 );
+                // Make sure we are not embedding external resources.
+                $responsehtml = htmlfilter::remove_embedded_stuff($responsehtml);
                 $details[$questionfolder]['responsetext'] = $responsehtml;
             } else if ($this->options->fileformat === 'pdf') {
                 $details[$questionfolder]['responsetext'] = format_text($details[$questionfolder]['responsetext'], FORMAT_PLAIN);

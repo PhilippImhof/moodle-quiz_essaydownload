@@ -108,7 +108,8 @@ final class htmlfilter_test extends \advanced_testcase {
             '<p>Before <svg><use href="https://example.com/icons.svg#foo"></use></svg> after.</p>',
         ];
         yield [
-            '<p>One [&lt;img&gt; tag removed] two <a href="https://example.com">link</a> three [&lt;iframe&gt; tag removed] four.</p>',
+            '<p>One [&lt;img&gt; tag removed] two <a href="https://example.com">link</a>' .
+                ' three [&lt;iframe&gt; tag removed] four.</p>',
             '<p>One <img src="a.png"> two <a href="https://example.com">link</a> three <iframe src="b"></iframe> four.</p>',
         ];
         // For the following test, we remove the outer <picture> element with its entire subtree,
@@ -128,13 +129,6 @@ final class htmlfilter_test extends \advanced_testcase {
      * @dataProvider provide_html_input
      */
     public function test_filtering(string $expected, string $input): void {
-        $dom = new \DOMDocument('1.0', 'UTF-8');
-        $loaded = $dom->loadHTML(
-            '<p>Before <embed src="https://example.com/file.swf"> after.</p>',
-            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NONET
-        );
-        //echo $dom->saveHTML();
-
         $output = trim(htmlfilter::remove_embedded_stuff($input));
         self::assertEquals($expected, $output);
     }

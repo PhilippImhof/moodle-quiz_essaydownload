@@ -26,7 +26,6 @@ namespace quiz_essaydownload;
 class htmlfilter {
     /** @var array HTML tag names that could lead to the inclusion of external resources */
     const PASSIVE_ELEMENTS = [
-        'img',
         'picture',
         'svg',
         'iframe',
@@ -71,11 +70,13 @@ class htmlfilter {
         // Note that LIBXML_NONET is particularly important, because we do not want the parser
         // to access any URLs.
         $dom = new \DOMDocument('1.0', 'UTF-8');
+        $input = '<?xml encoding="UTF-8">' . $html;
+
         // We suppress errors or warnings from the parser, because it might output them for
         // valid HTML 5 stuff. Storing the previous state here.
         $previous = libxml_use_internal_errors(true);
         $loaded = $dom->loadHTML(
-            $html,
+            $input,
             LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NONET
         );
         // Clear the errors and reset the error management to its previous state.
@@ -88,7 +89,17 @@ class htmlfilter {
             return get_string('filter_couldnotparse', 'quiz_essaydownload');
         }
 
-        // Iterate over all "risky" tags and remove them from the HTML.
+        // First, go over all <img> tags.
+        // video, source
+        // audio, source
+        // img
+        // src="http://localhost/~imh/essay_500/pluginfile.php/193/question/response_answer/7/2/47/icons8-moodle-240.png"
+        // http(s?)://{$CFG->wwwroot}/pluginfile.php .....  question response_answer
+        foreach (self::PASSIVE_ELEMENTS as $tagname) {
+            $nodes = $dom->getElementsByTagName($tagname);
+        }
+
+        // Iterate over all other "risky" tags and remove them from the HTML.
         foreach (self::PASSIVE_ELEMENTS as $tagname) {
             $nodes = $dom->getElementsByTagName($tagname);
 
@@ -140,6 +151,7 @@ class htmlfilter {
             }
         }
 
-        return $dom->saveHTML();
+        $output = $dom->saveHTML();
+        return preg_replace('/^<\?xml encoding="UTF-8">/', '', $output);
     }
 }

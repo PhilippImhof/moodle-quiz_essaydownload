@@ -371,8 +371,8 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             // around it, as that is done anyway during generation of the PDF.
             $qa = $quba->get_question_attempt($slot);
             $formattingoptions = [
-                'trusted' => true,
-                'filter' => false,
+                'trusted' => false,
+                'filter' => true,
                 'para' => false,
             ];
             // If the source is HTML, we will do that for the response. Otherwise, we might have to convert the summary
@@ -402,6 +402,11 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                     'questiontext',
                     $questiondefinition->id,
                 );
+                $formattingoptions = [
+                    'trusted' => true,
+                    'filter' => false,
+                    'para' => false,
+                ];
                 $questionhtml = format_text($questiontext, $questiondefinition->questiontextformat, $formattingoptions);
 
                 // As a last step, we must make sure that possible links to images are changed, because we do not need

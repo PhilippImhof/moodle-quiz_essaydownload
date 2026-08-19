@@ -1452,7 +1452,6 @@ final class report_test extends \advanced_testcase {
         self::assertNull($e);
 
         // Try to create a PDF from the question text.
-        $e = null;
         try {
             $doc = new customTCPDF('P', 'mm', 'A4');
             $doc->AddPage();
@@ -1495,7 +1494,7 @@ final class report_test extends \advanced_testcase {
     }
 
     public function test_image_in_response_text(): void {
-        global $CFG;
+        global $CFG, $DB;
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -1515,21 +1514,28 @@ final class report_test extends \advanced_testcase {
         // Add a student submit an attempt.
         $student = $generator->create_user();
         $generator->enrol_user($student->id, $course->id, 'student');
-        $this->setUser($student);
         [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
         $timenow = time();
         $tosubmit = [1 => ['answer' => '<p><img src="@@PLUGINFILE@@/image.png"</p>', 'answerformat' => FORMAT_HTML]];
+        $this->setUser($student);
         $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
         $this->process_submit_or_finish($attemptobj, $timenow);
+
+        // Gather the necessary information for the file storage.
+        $contextid = $quba->get_question_attempt(1)->get_question()->contextid;
+        $attemptid = $quba->get_question_attempt(1)->get_database_id();
+        $attemptstep = $DB->get_record('question_attempt_steps', ['questionattemptid' => $attemptid, 'state' => 'complete']);
+
         // Prepare image.
         $fs = get_file_storage();
         $fileinfo = [
-            'contextid' => $cat->contextid, // FIXME: not this context
+            'contextid' => $contextid,
             'component' => 'question',
             'filearea' => 'response_answer',
-            'itemid' => $attemptobj->get_question_usage()->get_question_attempt(1)->get_last_step_with_qt_var('answer')->get_id(),
+            'itemid' => $attemptstep->id,
             'filepath' => '/',
             'filename' => 'image.png',
+            'userid' => $student->id,
         ];
         $file = $fs->create_file_from_pathname(
             $fileinfo,
@@ -1548,8 +1554,19 @@ final class report_test extends \advanced_testcase {
         self::assertCount(1, $details);
         $responsetext = reset($details)['responsetext'];
 
-        // Try to create a PDF from the question text.
+        // Create an "empty" PDF for reference.
         $e = null;
+        try {
+            $doc = new customTCPDF('P', 'mm', 'A4');
+            $doc->AddPage();
+            $doc->writeHTML('<p>&nbsp;</p>');
+            $emptypdf = $doc->Output('', 'S');
+        } catch (Throwable $e) {
+            $emptypdf = '';
+        }
+        self::assertNull($e);
+
+        // Try to create a PDF from the question text.
         try {
             $doc = new customTCPDF('P', 'mm', 'A4');
             $doc->AddPage();
@@ -1561,7 +1578,8 @@ final class report_test extends \advanced_testcase {
         // There should be no error and the PDF should be larger than the image file itself.
         self::assertNull($e);
         $pdfsize = strlen($pdfoutput);
-        self::assertGreaterThan(2 * $file->get_filesize(), $pdfsize);
+        self::assertGreaterThan($file->get_filesize() + strlen($emptypdf), $pdfsize);
+        self::assertStringContainsString('/Subtype /Image', $pdfoutput);
 
         // Now, let's physically remove the file from the data directory. Normally, this is a very bad thing,
         // because it leads to inconsistencies. But in this case, we want to see what happens, when things break.
@@ -1586,7 +1604,8 @@ final class report_test extends \advanced_testcase {
             $pdfoutput = '';
         }
         self::assertNull($e);
-        self::assertLessThan(.5 * $pdfsize, strlen($pdfoutput));
+        self::assertLessThan(strlen($emptypdf) + 100, strlen($pdfoutput));
+        self::assertStringNotContainsString('/Subtype /Image', $pdfoutput);
     }
 
     public function test_failure_is_logged(): void {

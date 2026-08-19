@@ -35,13 +35,17 @@ final class htmlfilter_test extends \advanced_testcase {
      */
     public static function provide_html_input(): Generator {
         yield ['', ''];
-        yield ['', '<p><img class="img-fluid" src="@@PLUGINFILE@@/foo.png"></p>'];
+        yield ['<p><img class="img-fluid" src="@@PLUGINFILE@@/foo.png"></p>', '<p><img class="img-fluid" src="@@PLUGINFILE@@/foo.png"></p>'];
         yield ['<p>one</p><p>two</p>', '<p>one</p><p>two</p>'];
         yield ['<p>el ni&ntilde;o th&eacute; apr&egrave;s mena&ccedil;ant</p>', '<p>el niño thé après menaçant</p>'];
         yield ['<p>foo<strong>bar</strong></p>', '<p>foo<strong>bar</strong></p>'];
         yield ['<p><a href="https://www.moodle.org">Moodle</a></p>', '<p><a href="https://www.moodle.org">Moodle</a></p>'];
         yield ['<p><a href="../../../../etc/passwd">Click me!</a></p>', '<p><a href="../../../../etc/passwd">Click me!</a></p>'];
         yield ['[&lt;img&gt; tag removed]', '<img src="foo.jpg">'];
+        yield [
+            '<p>[&lt;img&gt; tag removed]</p>',
+            '<p><img srcset="@@PLUGINFILE@@/foo.png, https://www.evil.com/foobar.jpg"></p>',
+        ];
         yield [
             '<p>[url(...) removed from style attribute of &lt;span&gt; tag]<span style="background-image: none;">foo</span></p>',
             '<p><span style="background-image: url(\'foo.jpg\');">foo</span></p>',
@@ -92,11 +96,27 @@ final class htmlfilter_test extends \advanced_testcase {
         ];
         yield [
             '<p>Before [&lt;video&gt; tag removed] after.</p>',
-            '<p>Before <video src="movie.mp4" poster="poster.jpg"><source src="movie.webm"></video> after.</p>',
+            '<p>Before <video src="movie.mp4" poster="poster.jpg"><source src="movie.webm"/></video> after.</p>',
+        ];
+        yield [
+            '<p>A <video><source src="@@PLUGINFILE@@/foo.mp4"></source></video> B</p>',
+            '<p>A <video><source src="@@PLUGINFILE@@/foo.mp4"/></video> B</p>',
+        ];
+        yield [
+            '<p>Before [&lt;video&gt; tag removed] after.</p>',
+            '<p>Before <video src="movie.mp4" poster="poster.jpg"></video> after.</p>',
         ];
         yield [
             '<p>Before [&lt;audio&gt; tag removed] after.</p>',
             '<p>Before <audio src="sound.mp3"></audio> after.</p>',
+        ];
+        yield [
+            '<p>Before [&lt;audio&gt; tag removed] after.</p>',
+            '<p>Before <audio><source src="sound.mp3"/></audio> after.</p>',
+        ];
+        yield [
+            '<p>A <audio><source src="@@PLUGINFILE@@/foo.ogg"></source></audio> B</p>',
+            '<p>A <audio><source src="@@PLUGINFILE@@/foo.ogg"/></audio> B</p>',
         ];
         yield [
             '<p>Before [&lt;track&gt; tag removed] after.</p>',

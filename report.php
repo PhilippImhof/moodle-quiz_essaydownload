@@ -28,6 +28,7 @@ use core\dml\sql_join;
 use quiz_essaydownload\customTCPDF;
 use quiz_essaydownload\event\responses_downloaded;
 use quiz_essaydownload\event\responses_downloadfailed;
+use quiz_essaydownload\htmlfilter;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -365,46 +366,70 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             // If the user wants to use formatted text rather than the summary, fetch the true question text
             // and response now. Note that this setting will be overridden, if output is TXT instead of PDF.
             // We use format_text(), because either we currently have the summary (plain-text) or we will have
-            // formatted text, but it might be in MARKDOWN or other formats. We consider the text as trusted
-            // (because it has been filtered before) and disable filtering. Also, we do not put <div> tags
-            // around it, as that is done anyway during generation of the PDF.
+            // formatted text, but it might be in MARKDOWN or other formats. We do not put <div> tags around
+            // the text, as that is done later during generation of the PDF.
             $qa = $quba->get_question_attempt($slot);
             $formattingoptions = [
-                'trusted' => true,
-                'filter' => false,
+                'trusted' => false,
+                'filter' => true,
                 'para' => false,
             ];
-            // If the source is HTML, we will do that for the response. Otherwise, we might have to convert the summary
-            // to HTML, depending on the desired output format.
+            // If the source to be used is HTML, we fetch the full response and treat it here.
             if ($this->options->source === 'html') {
+                // Fetch the response. First, we check the format. If it is FORMAT_PLAIN, there
+                // is no need for any filtering, because < and > will later be changed to &lt; and
+                // &gt;, so there will be no "active" HTML.
+                $responseformat = $qa->get_last_qt_var('answerformat', FORMAT_PLAIN);
+                $responsehtml = strval($qa->get_last_qt_var('answer', ''));
+                if ($responseformat !== FORMAT_PLAIN) {
+                    // Make sure we are not embedding external resources.
+                    $responsehtml = htmlfilter::remove_embedded_stuff($responsehtml);
+                    // Make sure all @@PLUGINFILE@@ references are rewritten to real URLs.
+                    $responsehtml = $qa->rewrite_pluginfile_urls(
+                        $responsehtml,
+                        'question',
+                        'response_answer',
+                        $qa->get_last_step_with_qt_var('answer')->get_id(),
+                    );
+                }
+                // Run Moodle's HTML formatter and filter.
                 $responsehtml = format_text(
-                    strval($qa->get_last_qt_var('answer', '')),
+                    $responsehtml,
                     $qa->get_last_qt_var('answerformat', FORMAT_PLAIN),
                     $formattingoptions
                 );
+                // For internal resources (probably mainly images), replace the URL.
+                $responsehtml = $this->replace_image_paths_in_html($responsehtml);
                 $details[$questionfolder]['responsetext'] = $responsehtml;
             } else if ($this->options->fileformat === 'pdf') {
+                // If the user wants PDF output, but from the summary instead of the formatted
+                // original answer, we simply convert the summary (that's what is stored for now)
+                // to HTML.
                 $details[$questionfolder]['responsetext'] = format_text($details[$questionfolder]['responsetext'], FORMAT_PLAIN);
             }
 
-            // For the question text, however, we also make sure that the user did not override the source
+            // For the question text, we also make sure that the user did not override the source
             // by using the 'forceqtsummary' option.
             if ($this->options->source === 'html' && !$this->options->forceqtsummary) {
                 // The question text might contain images with a @@PLUGINFILE@@ URL, so we must run it through
                 // the attempt's rewrite_pluginfile_urls() function first. Afterwards, we run it through the HTML
-                // formatter, as with the response text.
+                // formatter, as with the response text. For now, we do not filter the question text, because
+                // we assume that teachers can be trusted.
                 $questiontext = $qa->rewrite_pluginfile_urls(
                     $questiondefinition->questiontext,
                     'question',
                     'questiontext',
                     $questiondefinition->id,
                 );
+                $formattingoptions = [
+                    'trusted' => true,
+                    'filter' => false,
+                    'para' => false,
+                ];
                 $questionhtml = format_text($questiontext, $questiondefinition->questiontextformat, $formattingoptions);
 
-                // As a last step, we must make sure that possible links to images are changed, because we do not need
-                // the external URL (for display in a browser), but rather the path to the file on the server.
-                $questionhtml = $this->replace_image_paths_in_questiontext($questionhtml);
-
+                // Translate the rewritten URLs for inclusion.
+                $questionhtml = $this->replace_image_paths_in_html($questionhtml);
                 $details[$questionfolder]['questiontext'] = $questionhtml;
             } else if ($this->options->fileformat === 'pdf') {
                 $details[$questionfolder]['questiontext'] = format_text($details[$questionfolder]['questiontext'], FORMAT_PLAIN);
@@ -419,13 +444,13 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
     /**
      * When embedding images in the question text, they will be referenced by their public URL, which
      * is suitable for displaying the question in a browser. However, when embedding the images in a
-     * PDF with TCPDF, this will not work. This function will translate the public URL to local file
-     * paths.
+     * PDF with TCPDF, this will not work. This function will translate the public URL to a data: URI
+     * for direct embedding. Prior versions translated them to local paths.
      *
-     * @param string $questiontext the question text possibly containing images
+     * @param string $html the html text possibly containing images
      * @return string
      */
-    protected function replace_image_paths_in_questiontext(string $questiontext): string {
+    protected function replace_image_paths_in_html(string $html): string {
         global $CFG;
 
         // The wwwroot might start with http or https. We substitute this by the regex *pattern*
@@ -434,24 +459,27 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
 
         // The relevant paths come from question_rewrite_question_urls() and will all have the form
         // <context>/question/questiontext/<usage_id>/<slot>/<question_id>/<filename>, with 'question'
-        // being the component and 'questiontext' the filearea.
+        // being the component and 'questiontext' or 'response_answer' the filearea.
         $pattern = '<img.+src="' . $wwwroot;
-        $pattern .= '/pluginfile.php/(?P<context>[0-9]+)/question/questiontext';
-        $pattern .= '/(?P<usage>[0-9]+)/(?<slot>[0-9]+)/(?<questionid>[0-9]+)';
+        $pattern .= '/pluginfile.php/(?P<context>[0-9]+)/question/(?<filearea>[^/]+)';
+        $pattern .= '/(?P<usage>[0-9]+)/(?<slot>[0-9]+)/(?<itemid>[0-9]+)';
         $pattern .= '/(?<filename>[^\"]+)';
 
         // Find all relevant paths and store their components in an array.
         $webpaths = [];
-        preg_match_all("#$pattern#", $questiontext, $webpaths, PREG_SET_ORDER);
+        preg_match_all("#$pattern#", $html, $webpaths, PREG_SET_ORDER);
 
         // Iterate over all matches, get the local path and substitute the src attribute accordingly.
         $fs = get_file_storage();
         foreach ($webpaths as $webpath) {
+            // The filename might contain urlencoded characters. We have to translate them back
+            // to normal characters, because that's how the file is referenced in the DB.
+            $webpath['filename'] = urldecode($webpath['filename']);
             $file = $fs->get_file(
                 $webpath['context'],
                 'question',
-                'questiontext',
-                $webpath['questionid'],
+                $webpath['filearea'],
+                $webpath['itemid'],
                 '',
                 $webpath['filename'],
             );
@@ -467,34 +495,26 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             // Test whether the file is readable or not. If there was an error somewhere, we'd rather know now.
             // In this case, we replace the entire <img> tag by a placeholder containing the filename.
             if (!is_readable($localpath)) {
-                $questiontext = preg_replace("#{$pattern}[^>]*>#", "[{$webpath['filename']}]", $questiontext);
+                $html = preg_replace("#{$pattern}[^>]*>#", "[{$webpath['filename']}]", $html);
                 continue;
             }
 
-            // TCPDF will "correct" the absolute path and prepend the server's document root. However, in some cases
-            // that will break things, because the server root might be e. g. /var/www, but the absolute path for our
-            // Moodle installation could be in /data/moodledata/files/... We try to anticipate that change by adding
-            // the appropriate number of ..'s to our path. TCPDF's path rewriting only happens, if the document root is
-            // set, is not just / and does not start with our file path, so we use their checks to know whether we must
-            // intervene or not.
-            if (!empty($_SERVER['DOCUMENT_ROOT']) && ($_SERVER['DOCUMENT_ROOT'] != '/')) {
-                $findroot = strpos($localpath, $_SERVER['DOCUMENT_ROOT']);
-                if (($findroot === false) || ($findroot > 1)) {
-                    $documentroot = $_SERVER['DOCUMENT_ROOT'];
-                    if (substr($documentroot, -1) == DIRECTORY_SEPARATOR) {
-                        $documentroot = substr($documentroot, 0, -1);
-                    }
-                    $levels = count(explode(DIRECTORY_SEPARATOR, $documentroot)) - 1;
-                    for ($i = 0; $i < $levels; $i++) {
-                        $localpath = '/..' . $localpath;
-                    }
-                }
+            // Fetch the file, read it and create a data: URI instead. This is the only reliable way for
+            // now, because TCPDF would change the absolute local path and it does no longer allow using
+            // relative paths that go to parent directories.
+            $data = file_get_contents($localpath);
+            if ($data === false) {
+                $html = preg_replace("#{$pattern}[^>]*>#", "[{$webpath['filename']}]", $html);
+                continue;
             }
+            $mime = mime_content_type($localpath);
+            $base64 = base64_encode($data);
+            $uri = "data:{$mime};base64,{$base64}";
 
-            $questiontext = preg_replace("#$pattern#", '<img src="' . $localpath, $questiontext);
+            $html = preg_replace("#$pattern#", '<img src="' . $uri, $html);
         }
 
-        return $questiontext;
+        return $html;
     }
 
     /**

@@ -1399,7 +1399,7 @@ final class report_test extends \advanced_testcase {
         $question = $questiongenerator->create_question('essay', null, [
             'category' => $cat->id,
             'name' => 'My Question Title / Test',
-            'questiontext' => ['text' => '<p><img src="@@PLUGINFILE@@/image.png"</p>', 'format' => FORMAT_HTML],
+            'questiontext' => ['text' => '<p><img src="@@PLUGINFILE@@/image.png"></p>', 'format' => FORMAT_HTML],
         ]);
         quiz_add_quiz_question($question->id, $quiz);
 
@@ -1439,8 +1439,19 @@ final class report_test extends \advanced_testcase {
         self::assertCount(1, $details);
         $questiontext = reset($details)['questiontext'];
 
-        // Try to create a PDF from the question text.
+        // Create an "empty" PDF for reference.
         $e = null;
+        try {
+            $doc = new customTCPDF('P', 'mm', 'A4');
+            $doc->AddPage();
+            $doc->writeHTML('<p>&nbsp;</p>');
+            $emptypdf = $doc->Output('', 'S');
+        } catch (Throwable $e) {
+            $emptypdf = '';
+        }
+        self::assertNull($e);
+
+        // Try to create a PDF from the question text.
         try {
             $doc = new customTCPDF('P', 'mm', 'A4');
             $doc->AddPage();
@@ -1452,7 +1463,8 @@ final class report_test extends \advanced_testcase {
         // There should be no error and the PDF should be larger than the image file itself.
         self::assertNull($e);
         $pdfsize = strlen($pdfoutput);
-        self::assertGreaterThan($file->get_filesize(), $pdfsize);
+        self::assertGreaterThan($file->get_filesize() + strlen($emptypdf), $pdfsize);
+        self::assertStringContainsString('/Subtype /Image', $pdfoutput);
 
         // Now, let's physically remove the file from the data directory. Normally, this is a very bad thing,
         // because it leads to inconsistencies. But in this case, we want to see what happens, when things break.
@@ -1477,7 +1489,123 @@ final class report_test extends \advanced_testcase {
             $pdfoutput = '';
         }
         self::assertNull($e);
-        self::assertLessThan($pdfsize, 0.8 * strlen($pdfoutput));
+        self::assertLessThan(strlen($emptypdf) + 100, strlen($pdfoutput));
+        self::assertStringNotContainsString('/Subtype /Image', $pdfoutput);
+    }
+
+    public function test_image_in_response_text(): void {
+        global $CFG, $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create a course and a quiz with an essay question.
+        $generator = $this->getDataGenerator();
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $course = $generator->create_course();
+        $quiz = $this->create_test_quiz($course);
+        $cat = $questiongenerator->create_question_category();
+        $question = $questiongenerator->create_question('essay', null, [
+            'category' => $cat->id,
+            'name' => 'My Question Title / Test',
+            'questiontext' => ['text' => '<p>foo</p>', 'format' => FORMAT_HTML],
+        ]);
+        quiz_add_quiz_question($question->id, $quiz);
+
+        // Add a student submit an attempt.
+        $student = $generator->create_user();
+        $generator->enrol_user($student->id, $course->id, 'student');
+        [$quizobj, $quba, $attemptobj] = quiz_essaydownload_test_helper::start_attempt_at_quiz($quiz, $student);
+        $timenow = time();
+        $tosubmit = [1 => ['answer' => '<p><img src="@@PLUGINFILE@@/image.png"</p>', 'answerformat' => FORMAT_HTML]];
+        $this->setUser($student);
+        $attemptobj->process_submitted_actions($timenow, false, $tosubmit);
+        $this->process_submit_or_finish($attemptobj, $timenow);
+
+        // Gather the necessary information for the file storage.
+        $contextid = $quba->get_question_attempt(1)->get_question()->contextid;
+        $attemptid = $quba->get_question_attempt(1)->get_database_id();
+        $attemptstep = $DB->get_record('question_attempt_steps', ['questionattemptid' => $attemptid, 'state' => 'complete']);
+
+        // Prepare image.
+        $fs = get_file_storage();
+        $fileinfo = [
+            'contextid' => $contextid,
+            'component' => 'question',
+            'filearea' => 'response_answer',
+            'itemid' => $attemptstep->id,
+            'filepath' => '/',
+            'filename' => 'image.png',
+            'userid' => $student->id,
+        ];
+        $file = $fs->create_file_from_pathname(
+            $fileinfo,
+            $CFG->dirroot . '/mod/quiz/report/essaydownload/tests/fixtures/image.png'
+        );
+
+        // Initialize report.
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid);
+        $report = new quiz_essaydownload_report();
+        [$currentgroup, $allstudentjoins, $groupstudentjoins, $allowedjoins] =
+            $report->init('essaydownload', 'quiz_essaydownload_form', $quiz, $cm, $course);
+
+        // Fetch the attempt and details using the report's API.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        $details = $report->get_details_for_attempt(array_keys($fetchedattempts)[0]);
+        self::assertCount(1, $details);
+        $responsetext = reset($details)['responsetext'];
+
+        // Create an "empty" PDF for reference.
+        $e = null;
+        try {
+            $doc = new customTCPDF('P', 'mm', 'A4');
+            $doc->AddPage();
+            $doc->writeHTML('<p>&nbsp;</p>');
+            $emptypdf = $doc->Output('', 'S');
+        } catch (Throwable $e) {
+            $emptypdf = '';
+        }
+        self::assertNull($e);
+
+        // Try to create a PDF from the question text.
+        try {
+            $doc = new customTCPDF('P', 'mm', 'A4');
+            $doc->AddPage();
+            $doc->writeHTML($responsetext);
+            $pdfoutput = $doc->Output('', 'S');
+        } catch (Throwable $e) {
+            $pdfoutput = '';
+        }
+        // There should be no error and the PDF should be larger than the image file itself.
+        self::assertNull($e);
+        $pdfsize = strlen($pdfoutput);
+        self::assertGreaterThan($file->get_filesize() + strlen($emptypdf), $pdfsize);
+        self::assertStringContainsString('/Subtype /Image', $pdfoutput);
+
+        // Now, let's physically remove the file from the data directory. Normally, this is a very bad thing,
+        // because it leads to inconsistencies. But in this case, we want to see what happens, when things break.
+        // Also, we are at the end of the test, so a reset is going to happen just after this.
+        $localpath = $fs->get_file_system()->get_local_path_from_storedfile($file);
+        unlink($localpath);
+
+        // Refetch.
+        $fetchedattempts = $report->get_attempts_and_names($groupstudentjoins);
+        $details = $report->get_details_for_attempt(array_keys($fetchedattempts)[0]);
+        self::assertCount(1, $details);
+        $responsetext = reset($details)['responsetext'];
+
+        // Trying to generate a PDF again. There should be no error, but the image should be replaced by
+        // [image.png], so the file size must be smaller.
+        try {
+            $doc = new customTCPDF('P', 'mm', 'A4');
+            $doc->AddPage();
+            $doc->writeHTML($responsetext);
+            $pdfoutput = $doc->Output('', 'S');
+        } catch (\Throwable $e) {
+            $pdfoutput = '';
+        }
+        self::assertNull($e);
+        self::assertLessThan(strlen($emptypdf) + 100, strlen($pdfoutput));
+        self::assertStringNotContainsString('/Subtype /Image', $pdfoutput);
     }
 
     public function test_failure_is_logged(): void {

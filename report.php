@@ -378,14 +378,21 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             // If the source is HTML, we will do that for the response. Otherwise, we might have to convert the summary
             // to HTML, depending on the desired output format.
             if ($this->options->source === 'html') {
-                // Make sure we are not embedding external resources.
-                $responsehtml = htmlfilter::remove_embedded_stuff(strval($qa->get_last_qt_var('answer', '')));
-                $responsehtml = $qa->rewrite_pluginfile_urls(
-                    $responsehtml,
-                    'question',
-                    'response_answer',
-                    $qa->get_last_step_with_qt_var('answer')->get_id(),
-                );
+                // Fetch the response. First, we check the format. If it is FORMAT_PLAIN, there
+                // is no need for any filtering, because < and > will later be changed to &lt; and
+                // &gt;, so there will be no "active" HTML.
+                $responseformat = $qa->get_last_qt_var('answerformat', FORMAT_PLAIN);
+                $responsehtml = strval($qa->get_last_qt_var('answer', ''));
+                if ($responseformat !== FORMAT_PLAIN) {
+                    // Make sure we are not embedding external resources.
+                    $responsehtml = htmlfilter::remove_embedded_stuff($responsehtml);
+                    $responsehtml = $qa->rewrite_pluginfile_urls(
+                        $responsehtml,
+                        'question',
+                        'response_answer',
+                        $qa->get_last_step_with_qt_var('answer')->get_id(),
+                    );
+                }
                 $responsehtml = format_text(
                     $responsehtml,
                     $qa->get_last_qt_var('answerformat', FORMAT_PLAIN),

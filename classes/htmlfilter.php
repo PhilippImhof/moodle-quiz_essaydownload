@@ -54,9 +54,9 @@ class htmlfilter {
     ];
 
     /**
-     * FIXME
+     * Check whether a given HTML element only refers to @@PLUGINFILE@@ files.
      *
-     * @param DOMNode $element
+     * @param DOMNode $element the element to check
      * @return bool
      */
     protected static function refers_to_pluginfile(DOMNode $element): bool {

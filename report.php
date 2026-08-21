@@ -366,17 +366,15 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             // If the user wants to use formatted text rather than the summary, fetch the true question text
             // and response now. Note that this setting will be overridden, if output is TXT instead of PDF.
             // We use format_text(), because either we currently have the summary (plain-text) or we will have
-            // formatted text, but it might be in MARKDOWN or other formats. We consider the text as trusted
-            // (because it has been filtered before) and disable filtering. Also, we do not put <div> tags
-            // around it, as that is done anyway during generation of the PDF.
+            // formatted text, but it might be in MARKDOWN or other formats. We do not put <div> tags around
+            // the text, as that is done later during generation of the PDF.
             $qa = $quba->get_question_attempt($slot);
             $formattingoptions = [
                 'trusted' => false,
                 'filter' => true,
                 'para' => false,
             ];
-            // If the source is HTML, we will do that for the response. Otherwise, we might have to convert the summary
-            // to HTML, depending on the desired output format.
+            // If the source to be used is HTML, we fetch the full response and treat it here.
             if ($this->options->source === 'html') {
                 // Fetch the response. First, we check the format. If it is FORMAT_PLAIN, there
                 // is no need for any filtering, because < and > will later be changed to &lt; and
@@ -386,6 +384,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 if ($responseformat !== FORMAT_PLAIN) {
                     // Make sure we are not embedding external resources.
                     $responsehtml = htmlfilter::remove_embedded_stuff($responsehtml);
+                    // Make sure all @@PLUGINFILE@@ references are rewritten to real URLs.
                     $responsehtml = $qa->rewrite_pluginfile_urls(
                         $responsehtml,
                         'question',
@@ -393,6 +392,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                         $qa->get_last_step_with_qt_var('answer')->get_id(),
                     );
                 }
+                // Run Moodle's HTML formatter and filter.
                 $responsehtml = format_text(
                     $responsehtml,
                     $qa->get_last_qt_var('answerformat', FORMAT_PLAIN),
@@ -402,15 +402,19 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 $responsehtml = $this->replace_image_paths_in_html($responsehtml);
                 $details[$questionfolder]['responsetext'] = $responsehtml;
             } else if ($this->options->fileformat === 'pdf') {
+                // If the user wants PDF output, but from the summary instead of the formatted
+                // original answer, we simply convert the summary (that's what is stored for now)
+                // to HTML.
                 $details[$questionfolder]['responsetext'] = format_text($details[$questionfolder]['responsetext'], FORMAT_PLAIN);
             }
 
-            // For the question text, however, we also make sure that the user did not override the source
+            // For the question text, we also make sure that the user did not override the source
             // by using the 'forceqtsummary' option.
             if ($this->options->source === 'html' && !$this->options->forceqtsummary) {
                 // The question text might contain images with a @@PLUGINFILE@@ URL, so we must run it through
                 // the attempt's rewrite_pluginfile_urls() function first. Afterwards, we run it through the HTML
-                // formatter, as with the response text.
+                // formatter, as with the response text. For now, we do not filter the question text, because
+                // we assume that teachers can be trusted.
                 $questiontext = $qa->rewrite_pluginfile_urls(
                     $questiondefinition->questiontext,
                     'question',
@@ -424,10 +428,8 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 ];
                 $questionhtml = format_text($questiontext, $questiondefinition->questiontextformat, $formattingoptions);
 
-                // As a last step, we must make sure that possible links to images are changed, because we do not need
-                // the external URL (for display in a browser), but rather the path to the file on the server.
+                // Translate the rewritten URLs for inclusion.
                 $questionhtml = $this->replace_image_paths_in_html($questionhtml);
-
                 $details[$questionfolder]['questiontext'] = $questionhtml;
             } else if ($this->options->fileformat === 'pdf') {
                 $details[$questionfolder]['questiontext'] = format_text($details[$questionfolder]['questiontext'], FORMAT_PLAIN);
@@ -497,7 +499,9 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
                 continue;
             }
 
-            // Fetch the file, read it and create a data: URI instead.
+            // Fetch the file, read it and create a data: URI instead. This is the only reliable way for
+            // now, because TCPDF would change the absolute local path and it does no longer allow using
+            // relative paths that go to parent directories.
             $data = file_get_contents($localpath);
             if ($data === false) {
                 $html = preg_replace("#{$pattern}[^>]*>#", "[{$webpath['filename']}]", $html);

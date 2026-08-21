@@ -26,7 +26,9 @@ use DOMNode;
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class htmlfilter {
-    /** @var array HTML tag names that could lead to the inclusion of external resources */
+    /** @var array HTML tag names that could lead to the inclusion of external resources.
+     *             Note that <source> and <img> are intentionally left out here.
+    */
     const PASSIVE_ELEMENTS = [
         // The <audio> and <video> tags normally use one or more <source> tags for their
         // source, but they do also support the src attribute.
@@ -62,14 +64,16 @@ class htmlfilter {
     protected static function refers_to_pluginfile(DOMNode $element): bool {
         $tagname = $element->tagName;
 
-        // For <video> and <audio> tags, things are more complicated: even though they normally
-        // use a child <source>, they may also have a src attribute. We check both. If one
-        // refers to something else than a @@PLUGINFILE@@, that is enough to trigger our filter.
+        // The <video> and <audio> tags normally use a child <source> to refer to their
+        // content, but they may also have a src attribute. We check both. If one refers
+        // to something else than a @@PLUGINFILE@@, that shall be enough to trigger our filter.
         if (in_array($tagname, ['video', 'audio'])) {
+            // Let's assume there is no src attribute.
             $src = null;
 
             // If there is a src and it does not go to a @@PLUGINFILE@@, we're out.
             if ($element->hasAttribute('src')) {
+                // Store the src for later.
                 $src = $element->getAttribute('src');
                 if (!str_starts_with($src, '@@PLUGINFILE@@')) {
                     return false;
@@ -96,13 +100,14 @@ class htmlfilter {
         }
 
         // For all other tags, particularly <img> and <source>, we check the src and the
-        // srcset attributes.
+        // srcset attributes. Let's assume, neither one is set.
         $src = null;
         $srcset = null;
 
         // If we have a src attribute and it does not start with @@PLUGINFILE@@,
         // we can leave here.
         if ($element->hasAttribute('src')) {
+            // Store the src for later.
             $src = $element->getAttribute('src');
             if (!str_starts_with($src, '@@PLUGINFILE@@')) {
                 return false;
@@ -122,8 +127,7 @@ class htmlfilter {
             }
         }
 
-        // We are still here. If the element has neither src nor srcset, it cannot refer
-        // to a @@PLUGINFILE@@.
+        // If the element has neither src nor srcset, it cannot refer to a @@PLUGINFILE@@.
         if ($srcset === null & $src === null) {
             return false;
         }
@@ -135,9 +139,9 @@ class htmlfilter {
 
     /**
      * Take the given HTML and remove all "passive" references to (possibly dangerous) resources.
-     * Using <a href="..."> is allowed, because the resource would only be accessed when the user
-     * clicks the given link. Passive references, on the other hand, could lead to a server-initiated
-     * access to some URL during the generation of the PDF.
+     * Using e. g. <a href="..."> shall be allowed, because the resource would only be accessed
+     * when the user clicks the given link. Passive references, on the other hand, could lead to
+     * a server-initiated access to some URL during the generation of the PDF.
      *
      * @param string $html the HTML code to be filtered, should be sanitized before
      * @return string
@@ -188,7 +192,7 @@ class htmlfilter {
             $tagname = $element->tagName;
 
             // For all <img> elements, we check whether the source is a @@PLUGINFILE@@ file. If not,
-            // we remove the element.
+            // we remove the element and replace it by a note.
             if ($tagname === 'img' && !self::refers_to_pluginfile($element)) {
                 $replacement = $dom->createTextNode(
                     get_string('filter_tagremoved', 'quiz_essaydownload', $tagname)
@@ -197,8 +201,9 @@ class htmlfilter {
             }
 
             // For the <source> of a <picture>, <video> or <audio>, we do the same as above, but we
-            // have to remove the parent element with its entire subtree.
+            // have to remove the parent element with its entire subtree and not just the element itself.
             if ($tagname === 'source' && !self::refers_to_pluginfile($element)) {
+                // We will add our note to the parent's parent, so we must make sure it sill exists.
                 if ($element->parentNode->parentNode === null) {
                     continue;
                 }
@@ -241,9 +246,9 @@ class htmlfilter {
                 }
             }
 
-            // Finally, we check whether the element has a src, srcset or data attribute.
-            // In that case, we remove the attribute, just to be sure. Note that we exclude
-            // the element types that have been treated in the step before.
+            // Finally, we check whether the element has a src, srcset, srcdoc, poster or data
+            // attribute. In that case, we remove the attribute, just to be sure. Note that we
+            // exclude the element types (e. g. img) that have been treated in the step before.
             foreach (self::RESOURCE_ATTRIBUTES as $attribute) {
                 if (in_array($tagname, $exclude)) {
                     continue;

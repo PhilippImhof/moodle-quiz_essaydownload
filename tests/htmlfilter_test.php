@@ -37,7 +37,7 @@ final class htmlfilter_test extends \advanced_testcase {
         yield ['', ''];
         yield [
             '<p><img class="img-fluid" src="@@PLUGINFILE@@/foo.png"></p>',
-            '<p><img class="img-fluid" src="@@PLUGINFILE@@/foo.png"></p>'
+            '<p><img class="img-fluid" src="@@PLUGINFILE@@/foo.png"></p>',
         ];
         yield ['<p>one</p><p>two</p>', '<p>one</p><p>two</p>'];
         yield ['<p>el ni&ntilde;o th&eacute; apr&egrave;s mena&ccedil;ant</p>', '<p>el niño thé après menaçant</p>'];

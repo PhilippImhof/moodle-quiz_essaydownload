@@ -1798,4 +1798,104 @@ final class report_test extends \advanced_testcase {
         self::assertEquals($USER->id, $data['userid']);
         self::assertStringEndsWith('Group scope: mygroup.', $event->get_description());
     }
+
+    public function test_replace_image_paths_in_html(): void {
+        global $CFG;
+        $this->resetAfterTest();
+
+        // Create a dummy report and make the protected function accessible via Reflection.
+        $report = new quiz_essaydownload_report();
+        $reflectedreport = new \ReflectionClass($report);
+        $reflectedmethod = $reflectedreport->getMethod('replace_image_paths_in_html');
+        $reflectedmethod->setAccessible(true);
+
+        // Define a few <img> tags to test various combinations.
+        $validfirst = '<img src="' . $CFG->wwwroot . '/pluginfile.php/101/question/questiontext/1/1/1/pic1.jpg">';
+        $validsecond = '<img src="' . $CFG->wwwroot . '/pluginfile.php/101/question/questiontext/1/1/2/pic2.jpg">';
+        $invalidfirst = '<img src="' . $CFG->wwwroot . '/pluginfile.php/101/question/questiontext/99/99/99/invalid1.jpg">';
+        $invalidsecond = '<img src="' . $CFG->wwwroot . '/pluginfile.php/101/question/questiontext/99/99/99/invalid2.jpg">';
+
+        // Create two valid files to simulate image data. They are actually text files to simplify testing.
+        $fs = get_file_storage();
+        $fileinfo = [
+            'contextid' => 101,
+            'component' => 'question',
+            'filearea' => 'questiontext',
+            'itemid' => 1,
+            'filepath' => '/',
+            'filename' => 'pic1.jpg',
+        ];
+        $fs->create_file_from_string($fileinfo, 'PIC1');
+        $fileinfo = [
+            'contextid' => 101,
+            'component' => 'question',
+            'filearea' => 'questiontext',
+            'itemid' => 2,
+            'filepath' => '/',
+            'filename' => 'pic2.jpg',
+        ];
+        $fs->create_file_from_string($fileinfo, 'PIC2');
+
+        // Get Base64 of the "image" data.
+        $replacedfirst = '<img src="data:text/plain;base64,' . base64_encode('PIC1') . '">';
+        $replacedsecond = '<img src="data:text/plain;base64,' . base64_encode('PIC2') . '">';
+
+        // Test series 1: two valid embedded images on the same line in different variants.
+        self::assertEquals(
+            $replacedfirst . $replacedsecond,
+            $reflectedmethod->invoke($report, $validfirst . '' . $validsecond),
+        );
+        self::assertEquals(
+            $replacedfirst . ' ' . $replacedsecond,
+            $reflectedmethod->invoke($report, $validfirst . ' ' . $validsecond),
+        );
+        self::assertEquals(
+            $replacedfirst . ' foobar ' . $replacedsecond,
+            $reflectedmethod->invoke($report, $validfirst . ' foobar ' . $validsecond),
+        );
+
+        // Test series 2: two valid embedded images on the different lines in different variants.
+        self::assertEquals(
+            $replacedfirst . "\n\n" . $replacedsecond,
+            $reflectedmethod->invoke($report, $validfirst . "\n\n" . $validsecond),
+        );
+        self::assertEquals(
+            $replacedfirst . "\nfoobar\n" . $replacedsecond,
+            $reflectedmethod->invoke($report, $validfirst . "\nfoobar\n" . $validsecond),
+        );
+        self::assertEquals(
+            $replacedfirst . "foo\nfoobar\nbar" . $replacedsecond,
+            $reflectedmethod->invoke($report, $validfirst . "foo\nfoobar\nbar" . $validsecond),
+        );
+
+        // Test series 3: one valid and one invalid image on the same or different lines,
+        // with or without text between them.
+        self::assertEquals(
+            '[invalid1.jpg]' . $replacedsecond,
+            $reflectedmethod->invoke($report, $invalidfirst . $validsecond),
+        );
+        self::assertEquals(
+            $replacedfirst . '[invalid2.jpg]',
+            $reflectedmethod->invoke($report, $validfirst . $invalidsecond),
+        );
+        self::assertEquals(
+            "[invalid1.jpg]\n\n" . $replacedsecond,
+            $reflectedmethod->invoke($report, $invalidfirst . "\n\n" . $validsecond),
+        );
+        self::assertEquals(
+            $replacedfirst . "\nfoobar\n[invalid2.jpg]",
+            $reflectedmethod->invoke($report, $validfirst . "\nfoobar\n" . $invalidsecond),
+        );
+
+        // Test series 4: using the same image twice.
+        self::assertEquals(
+            $replacedfirst . $replacedfirst,
+            $reflectedmethod->invoke($report, $validfirst . $validfirst),
+        );
+        self::assertEquals(
+            '[invalid1.jpg][invalid1.jpg]',
+            $reflectedmethod->invoke($report, $invalidfirst . $invalidfirst),
+        );
+
+    }
 }

@@ -460,7 +460,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
         // The relevant paths come from question_rewrite_question_urls() and will all have the form
         // <context>/question/questiontext/<usage_id>/<slot>/<question_id>/<filename>, with 'question'
         // being the component and 'questiontext' or 'response_answer' the filearea.
-        $pattern = '<img.+src="' . $wwwroot;
+        $pattern = '<img[^>]+?src="' . $wwwroot;
         $pattern .= '/pluginfile.php/(?P<context>[0-9]+)/question/(?<filearea>[^/]+)';
         $pattern .= '/(?P<usage>[0-9]+)/(?<slot>[0-9]+)/(?<itemid>[0-9]+)';
         $pattern .= '/(?<filename>[^\"]+)';
@@ -495,7 +495,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             // Test whether the file is readable or not. If there was an error somewhere, we'd rather know now.
             // In this case, we replace the entire <img> tag by a placeholder containing the filename.
             if (!is_readable($localpath)) {
-                $html = preg_replace("#{$pattern}[^>]*>#", "[{$webpath['filename']}]", $html);
+                $html = preg_replace("#{$pattern}[^>]*>#", "[{$webpath['filename']}]", $html, 1);
                 continue;
             }
 
@@ -504,14 +504,14 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             // relative paths that go to parent directories.
             $data = file_get_contents($localpath);
             if ($data === false) {
-                $html = preg_replace("#{$pattern}[^>]*>#", "[{$webpath['filename']}]", $html);
+                $html = preg_replace("#{$pattern}[^>]*>#", "[{$webpath['filename']}]", $html, 1);
                 continue;
             }
             $mime = mime_content_type($localpath);
             $base64 = base64_encode($data);
             $uri = "data:{$mime};base64,{$base64}";
 
-            $html = preg_replace("#$pattern#", '<img src="' . $uri, $html);
+            $html = preg_replace("#$pattern#", '<img src="' . $uri, $html, 1);
         }
 
         return $html;

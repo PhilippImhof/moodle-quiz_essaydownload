@@ -1896,6 +1896,5 @@ final class report_test extends \advanced_testcase {
             '[invalid1.jpg][invalid1.jpg]',
             $reflectedmethod->invoke($report, $invalidfirst . $invalidfirst),
         );
-
     }
 }

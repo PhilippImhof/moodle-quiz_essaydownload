@@ -66,7 +66,8 @@ Feature: Correct handling of groups
 
   Scenario: An editing teacher should see all students and all groups.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
-    Then I should see "Separate groups"
+    # Layout has changed for Moodle 5.3, it's now "Select separate groups". It used to be "Separate groups".
+    Then I should see "eparate groups"
     And I should see "Attempts: 3"
     # Download via form submit button is currently not supported in behat.
     # And following "Download" should download between "1350" and "1450" bytes
@@ -78,16 +79,29 @@ Feature: Correct handling of groups
     Then I should see "Attempts: 3 (1 from this group)"
     # And following "Download" should download between "470" and "510" bytes
 
-  Scenario: If a (non-editing) teacher is only in one group, they should not see the group selection dropdown.
+  Scenario: In Moodle 5.2 and before, if a (non-editing) teacher is only in one group, they should not see the group selection dropdown.
+    Given the site is running Moodle version 5.2 or lower
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher2"
     Then I should see "Separate groups: group1"
     And I should see "Attempts: 3 (1 from this group)"
     And "group" "field" should not exist
-    # And following "Download" should download between "460" and "490" bytes
+
+  Scenario: If a (non-editing) teacher is only in one group, they should not be able to select other groups.
+    Given the site is running Moodle version 5.3 or higher
+    When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher2"
+    Then I should see "Select separate groups"
+    And I confirm "G1" exists in the "Search groups" search combo box
+    And I confirm "All participants" does not exist in the "Search groups" search combo box
+    And I confirm "G2" does not exist in the "Search groups" search combo box
+    And I confirm "G3" does not exist in the "Search groups" search combo box
+    And I confirm "G4" does not exist in the "Search groups" search combo box
+    And I confirm "G5" does not exist in the "Search groups" search combo box
+    And I should see "Attempts: 3 (1 from this group)"
 
   Scenario: A (non-editing) teacher should only have access to their groups.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher3"
-    Then I should see "Separate groups"
+    # Layout has changed for Moodle 5.3, it's now "Select separate groups". It used to be "Separate groups".
+    Then I should see "eparate groups"
     And "group" "field" should exist
     And I should see "Attempts: 3 (1 from this group)"
     And the "group" select box should not contain "group3"
@@ -97,7 +111,8 @@ Feature: Correct handling of groups
 
   Scenario: A (non-editing) teacher that is part of no groups should not have access.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher4"
-    Then I should see "Separate groups"
+    # Layout has changed for Moodle 5.3, it's now "Select separate groups". It used to be "Separate groups".
+    Then I should see "eparate groups"
     And "group" "field" should not exist
     And I should see "Attempts: 3"
     And I should see "Sorry, but you need to be part of a group to see this page."
@@ -108,7 +123,8 @@ Feature: Correct handling of groups
       | capability                  | permission | role    | contextlevel | reference |
       | moodle/site:accessallgroups | Allow      | teacher | Course       | C1        |
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher4"
-    And I should see "Separate groups"
+    # Layout has changed for Moodle 5.3, it's now "Select separate groups". It used to be "Separate groups".
+    And I should see "eparate groups"
     And I should see "Attempts: 3"
     And "group" "field" should exist
     And the "group" select box should contain "group1"
@@ -119,14 +135,16 @@ Feature: Correct handling of groups
 
   Scenario: If there are students in a group, but none attempted the quiz, the user should see a notification.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
-    Then I should see "Separate groups"
+    # Layout has changed for Moodle 5.3, it's now "Select separate groups". It used to be "Separate groups".
+    Then I should see "eparate groups"
     When I set the field "group" to "group4"
     Then I should see "Attempts: 3 (0 from this group)"
     And I should see "Nothing to download"
 
   Scenario: If there are no students in a group, the user should see a notification.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
-    Then I should see "Separate groups"
+    # Layout has changed for Moodle 5.3, it's now "Select separate groups". It used to be "Separate groups".
+    Then I should see "eparate groups"
     When I set the field "group" to "group5"
     Then I should see "Attempts: 3 (0 from this group)"
     And I should see "Nothing to download"

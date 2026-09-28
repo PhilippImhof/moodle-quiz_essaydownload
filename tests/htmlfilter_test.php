@@ -39,11 +39,16 @@ final class htmlfilter_test extends \advanced_testcase {
             '<p><img class="img-fluid" src="@@PLUGINFILE@@/foo.png"></p>',
             '<p><img class="img-fluid" src="@@PLUGINFILE@@/foo.png"></p>',
         ];
+        yield ['[&lt;iframe&gt; tag removed]', '<iframe srcdoc="test.html"><p>foo</p></iframe>'];
         yield ['<p>one</p><p>two</p>', '<p>one</p><p>two</p>'];
         yield ['<p>el ni&ntilde;o th&eacute; apr&egrave;s mena&ccedil;ant</p>', '<p>el niño thé après menaçant</p>'];
         yield ['<p>foo<strong>bar</strong></p>', '<p>foo<strong>bar</strong></p>'];
         yield ['<p><a href="https://www.moodle.org">Moodle</a></p>', '<p><a href="https://www.moodle.org">Moodle</a></p>'];
         yield ['<p><a href="../../../../etc/passwd">Click me!</a></p>', '<p><a href="../../../../etc/passwd">Click me!</a></p>'];
+        yield [
+            '<p>[&lt;link&gt; tag removed]</p>',
+            '<p><link href="../../../../etc/passwd"></p>'
+        ];
         yield ['[&lt;img&gt; tag removed]', '<img src="foo.jpg">'];
         yield [
             '<p>[&lt;img&gt; tag removed]</p>',
@@ -82,7 +87,7 @@ final class htmlfilter_test extends \advanced_testcase {
             '<p>Hello <img srcset="small.png 1x, large.png 2x"> world.</p>',
         ];
         yield [
-            '<p>Hello [&lt;picture&gt; tag removed] world.</p>',
+            '<p>Hello [&lt;source&gt; tag removed][&lt;picture&gt; tag removed] world.</p>',
             '<p>Hello <picture><source srcset="large.webp"><img src="small.png"></picture> world.</p>',
         ];
         yield [
@@ -102,7 +107,7 @@ final class htmlfilter_test extends \advanced_testcase {
             '<p>Before <video src="movie.mp4" poster="poster.jpg"><source src="movie.webm"/></video> after.</p>',
         ];
         yield [
-            '<p>A <video><source src="@@PLUGINFILE@@/foo.mp4"></source></video> B</p>',
+            '<p>A [&lt;video&gt; tag removed] B</p>',
             '<p>A <video><source src="@@PLUGINFILE@@/foo.mp4"/></video> B</p>',
         ];
         yield [
@@ -118,7 +123,7 @@ final class htmlfilter_test extends \advanced_testcase {
             '<p>Before <audio><source src="sound.mp3"/></audio> after.</p>',
         ];
         yield [
-            '<p>A <audio><source src="@@PLUGINFILE@@/foo.ogg"></source></audio> B</p>',
+            '<p>A [&lt;audio&gt; tag removed] B</p>',
             '<p>A <audio><source src="@@PLUGINFILE@@/foo.ogg"/></audio> B</p>',
         ];
         yield [
@@ -138,11 +143,34 @@ final class htmlfilter_test extends \advanced_testcase {
                 ' three [&lt;iframe&gt; tag removed] four.</p>',
             '<p>One <img src="a.png"> two <a href="https://example.com">link</a> three <iframe src="b"></iframe> four.</p>',
         ];
-        // For the following test, we remove the outer <picture> element with its entire subtree,
-        // so there should be only one notice in the output.
         yield [
-            '<div>Before [&lt;picture&gt; tag removed] after.</div>',
+            '[&lt;object&gt; tag removed]',
+            '<object type="video/mp4" data="foo.mp4"></object>',
+        ];
+        yield [
+            '[&lt;img&gt; tag removed][&lt;object&gt; tag removed]',
+            '<object type="video/mp4" data="foo.mp4"><img src="foo.png"></object>',
+        ];
+        yield [
+            '<img src="@@PLUGINFILE@@/bar.jpg">[&lt;object&gt; tag removed]',
+            '<object type="video/mp4" data="foo.mp4"><img src="@@PLUGINFILE@@/bar.jpg"></object>',
+        ];
+        // For the following tests, we "unwrap" the outer <picture>, i. e. we move the <source> and the <img> tag
+        // up by one level. The <picture> is removed, the <source> and <img> remain in the DOM for further inspection.
+        // The <source> will be removed separately and the <img> will be removed, because it does not refer to a
+        // @@PLUGINFILE@@. If the <source> is not self-closed, the <img> will be considered being part of <source>
+        // and will be removed without a separate notice.
+        yield [
+            '<div>Before [&lt;source&gt; tag removed][&lt;picture&gt; tag removed] after.</div>',
             '<div>Before <picture><source src="a.png"><img src="b.png"></picture> after.</div>',
+        ];
+        yield [
+            '<div>Before [&lt;source&gt; tag removed][&lt;img&gt; tag removed][&lt;picture&gt; tag removed] after.</div>',
+            '<div>Before <picture><source src="a.png"/><img src="b.png"></picture> after.</div>',
+        ];
+        yield [
+            '<div>Before [&lt;source&gt; tag removed]<img src="@@PLUGINFILE@@/foo.png">[&lt;picture&gt; tag removed] after.</div>',
+            '<div>Before <picture><source src="a.png"/><img src="@@PLUGINFILE@@/foo.png"></picture> after.</div>',
         ];
     }
 

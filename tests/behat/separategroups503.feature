@@ -1,8 +1,8 @@
 @quiz @quiz_essaydownload @javascript
-Feature: Correct handling of groups pre 5.3
+Feature: Correct handling of groups for 5.3+
 
   Background:
-    Given the site is running Moodle version 5.2 or lower
+    Given the site is running Moodle version 5.3 or higher
     Given the following "courses" exist:
       | fullname | shortname | category |
       | Course 1 | C1        | 0        |
@@ -67,35 +67,51 @@ Feature: Correct handling of groups pre 5.3
 
   Scenario: An editing teacher should see all students and all groups.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
-    Then I should see "Separate groups"
+    Then I should see "Select separate groups"
     And I should see "Attempts: 3"
-    And "group" "field" should exist
-    And the "group" select box should contain "group1"
-    And the "group" select box should contain "group2"
-    And the "group" select box should contain "group3"
-    When I set the field "group" to "group3"
+    And I confirm "All participants" exists in the "Search groups" search combo box
+    And I confirm "group1" exists in the "Search groups" search combo box
+    And I confirm "group2" exists in the "Search groups" search combo box
+    And I confirm "group3" exists in the "Search groups" search combo box
+    And I confirm "group4" exists in the "Search groups" search combo box
+    And I confirm "group5" exists in the "Search groups" search combo box
+    When I click on "group1" in the "Search groups" search combo box
     Then I should see "Attempts: 3 (1 from this group)"
 
-  Scenario: If a (non-editing) teacher is only in one group, they should not see the group selection dropdown.
-    Given the site is running Moodle version 5.2 or lower
+  Scenario: If a (non-editing) teacher is only in one group, they should not be able to select other groups.
+    Given the site is running Moodle version 5.3 or higher
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher2"
-    Then I should see "Separate groups: group1"
+    Then I should see "Select separate groups"
+    And I confirm "group1" exists in the "Search groups" search combo box
+    And I confirm "All participants" does not exist in the "Search groups" search combo box
+    And I confirm "group2" does not exist in the "Search groups" search combo box
+    And I confirm "group3" does not exist in the "Search groups" search combo box
+    And I confirm "group4" does not exist in the "Search groups" search combo box
+    And I confirm "group5" does not exist in the "Search groups" search combo box
     And I should see "Attempts: 3 (1 from this group)"
-    And "group" "field" should not exist
 
   Scenario: A (non-editing) teacher should only have access to their groups.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher3"
-    Then I should see "Separate groups"
-    And "group" "field" should exist
+    Then I should see "Select separate groups"
+    And I confirm "group1" exists in the "Search groups" search combo box
+    And I confirm "group2" exists in the "Search groups" search combo box
+    And I confirm "All participants" does not exist in the "Search groups" search combo box
+    And I confirm "group3" does not exist in the "Search groups" search combo box
+    And I confirm "group4" does not exist in the "Search groups" search combo box
+    And I confirm "group5" does not exist in the "Search groups" search combo box
     And I should see "Attempts: 3 (1 from this group)"
-    And the "group" select box should not contain "group3"
-    When I set the field "group" to "group2"
+    When I click on "group2" in the "Search groups" search combo box
     Then I should see "Attempts: 3 (2 from this group)"
 
   Scenario: A (non-editing) teacher that is part of no groups should not have access.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher4"
-    Then I should see "Separate groups"
-    And "group" "field" should not exist
+    Then I should see "Select separate groups"
+    And I confirm "All participants" exists in the "Search groups" search combo box
+    And I confirm "group1" does not exist in the "Search groups" search combo box
+    And I confirm "group2" does not exist in the "Search groups" search combo box
+    And I confirm "group3" does not exist in the "Search groups" search combo box
+    And I confirm "group4" does not exist in the "Search groups" search combo box
+    And I confirm "group5" does not exist in the "Search groups" search combo box
     And I should see "Attempts: 3"
     And I should see "Sorry, but you need to be part of a group to see this page."
     And I should not see "Nothing to download"
@@ -105,26 +121,26 @@ Feature: Correct handling of groups pre 5.3
       | capability                  | permission | role    | contextlevel | reference |
       | moodle/site:accessallgroups | Allow      | teacher | Course       | C1        |
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher4"
-    And I should see "Separate groups"
+    And I should see "Select separate groups"
     And I should see "Attempts: 3"
-    And "group" "field" should exist
-    And the "group" select box should contain "group1"
-    And the "group" select box should contain "group2"
-    And the "group" select box should contain "group3"
-    When I set the field "group" to "group3"
+    And I confirm "group1" exists in the "Search groups" search combo box
+    And I confirm "group2" exists in the "Search groups" search combo box
+    And I confirm "group3" exists in the "Search groups" search combo box
+    And I confirm "All participants" exists in the "Search groups" search combo box
+    When I click on "group3" in the "Search groups" search combo box
     Then I should see "Attempts: 3 (1 from this group)"
 
   Scenario: If there are students in a group, but none attempted the quiz, the user should see a notification.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
-    Then I should see "Separate groups"
-    When I set the field "group" to "group4"
+    Then I should see "Select separate groups"
+    When I click on "group4" in the "Search groups" search combo box
     Then I should see "Attempts: 3 (0 from this group)"
     And I should see "Nothing to download"
 
   Scenario: If there are no students in a group, the user should see a notification.
     When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
-    Then I should see "Separate groups"
-    When I set the field "group" to "group5"
+    Then I should see "Select separate groups"
+    When I click on "group5" in the "Search groups" search combo box
     Then I should see "Attempts: 3 (0 from this group)"
     And I should see "Nothing to download"
     And I should not see "There are no students in this group yet"

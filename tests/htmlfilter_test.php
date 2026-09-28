@@ -51,7 +51,7 @@ final class htmlfilter_test extends \advanced_testcase {
         ];
         yield ['[&lt;img&gt; tag removed]', '<img src="foo.jpg">'];
         yield [
-            '<p>[&lt;img&gt; tag removed]</p>',
+            '<p>[srcset attribute removed from &lt;img&gt; tag]<img></p>',
             '<p><img srcset="@@PLUGINFILE@@/foo.png, https://www.evil.com/foobar.jpg"></p>',
         ];
         yield [
@@ -66,6 +66,8 @@ final class htmlfilter_test extends \advanced_testcase {
             '<p><span style="font-weight: bold; text-align: center">Hello</span></p>',
             '<p><span style="font-weight: bold; text-align: center">Hello</span></p>',
         ];
+        // We check the removal of possibly risky attributes even in tags that do not normally
+        // support them. The examples do not make sense as HTML code, but they are useful for the test.
         yield [
             '<p>[src attribute removed from &lt;span&gt; tag]<span>Hello</span></p>',
             '<p><span src="https://example.com/image.png">Hello</span></p>',
@@ -73,6 +75,18 @@ final class htmlfilter_test extends \advanced_testcase {
         yield [
             '<p>[srcset attribute removed from &lt;span&gt; tag]<span>Hello</span></p>',
             '<p><span srcset="https://example.com/image.png">Hello</span></p>',
+        ];
+        yield [
+            '<p>[srcdoc attribute removed from &lt;span&gt; tag]<span>Hello</span></p>',
+            '<p><span srcdoc="https://example.com/image.png">Hello</span></p>',
+        ];
+        yield [
+            '<p>[data attribute removed from &lt;span&gt; tag]<span>Hello</span></p>',
+            '<p><span data="https://example.com/image.png">Hello</span></p>',
+        ];
+        yield [
+            '<p>[poster attribute removed from &lt;span&gt; tag]<span>Hello</span></p>',
+            '<p><span poster="https://example.com/image.png">Hello</span></p>',
         ];
         yield [
             '<p>[data attribute removed from &lt;span&gt; tag]<span>Hello</span></p>',
@@ -83,8 +97,12 @@ final class htmlfilter_test extends \advanced_testcase {
             '<p>Hello <img src="https://example.com/image.png"> world.</p>',
         ];
         yield [
-            '<p>Hello [&lt;img&gt; tag removed] world.</p>',
+            '<p>Hello [srcset attribute removed from &lt;img&gt; tag]<img> world.</p>',
             '<p>Hello <img srcset="small.png 1x, large.png 2x"> world.</p>',
+        ];
+        yield [
+            '<p>Hello [srcset attribute removed from &lt;img&gt; tag]<img src="@@PLUGINFILE@@/test.jpg"> world.</p>',
+            '<p>Hello <img src="@@PLUGINFILE@@/test.jpg" srcset="small.png 1x, large.png 2x"> world.</p>',
         ];
         yield [
             '<p>Hello [&lt;source&gt; tag removed][&lt;picture&gt; tag removed] world.</p>',

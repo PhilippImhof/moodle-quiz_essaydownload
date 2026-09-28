@@ -169,7 +169,7 @@ class htmlfilter {
                 if ($element->hasAttribute($attribute)) {
                     // For the <img> tag, allow a src attribute, but only if it refers to a
                     // @@PLUGINFILE@@. Otherwise, remove the entire tag.
-                    if ($tagname === 'img') {
+                    if ($tagname === 'img' && $attribute === 'src') {
                         if (!self::img_src_refers_to_pluginfile($element)) {
                             $replacement = $dom->createTextNode(
                                 get_string('filter_tagremoved', 'quiz_essaydownload', $tagname)

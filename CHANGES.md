@@ -1,5 +1,15 @@
 # Changelog
 
+### 1.7.0 (2026-10-10)
+
+- improvement: add logging of successful and failed exports
+- improvement: allow embedded images in student responses
+- improvement: filter HTML to avoid server-side access to external resources
+- bugfix: adapt to changes in TCPDF for embedding of images
+- bugfix: prevent access to other groups for non-editing teacher
+- internal: update CI
+- assure compatibility with Moodle 5.3
+
 ### 1.6.5 (2026-06-21)
 
 - improvement: allow customising of filename and name format

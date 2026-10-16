@@ -144,3 +144,8 @@ Feature: Correct handling of groups for 5.3+
     Then I should see "Attempts: 3 (0 from this group)"
     And I should see "Nothing to download"
     And I should not see "There are no students in this group yet"
+
+  Scenario: The user search combobox and filter by name widget should not exist
+    When I am on the "Quiz 1" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    Then I should not see "Filter by name"
+    And ".usersearchdropdown" "css_element" should not exist

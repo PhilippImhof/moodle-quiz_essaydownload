@@ -32,18 +32,6 @@ use quiz_essaydownload\htmlfilter;
 
 defined('MOODLE_INTERNAL') || die();
 
-// This work-around is required until Moodle 4.2 is the lowest version we support.
-if (class_exists('\mod_quiz\local\reports\attempts_report')) {
-    class_alias('\mod_quiz\local\reports\attempts_report', '\quiz_essaydownload_report_parent_alias');
-    class_alias('\mod_quiz\quiz_attempt', '\quiz_essaydownload_quiz_attempt_alias');
-} else {
-    require_once($CFG->dirroot . '/mod/quiz/report/default.php');
-    require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
-    require_once($CFG->dirroot . '/mod/quiz/attemptlib.php');
-    class_alias('\quiz_attempts_report', '\quiz_essaydownload_report_parent_alias');
-    class_alias('\quiz_attempt', '\quiz_essaydownload_quiz_attempt_alias');
-}
-
 require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/classes/customTCPDF.php');
 require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/essaydownload_form.php');
 require_once($CFG->dirroot . '/mod/quiz/report/essaydownload/essaydownload_options.php');
@@ -60,7 +48,7 @@ require_once($CFG->libdir . '/pdflib.php');
  * @author    Philipp E. Imhof
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
+class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report {
     /** @var int */
     const OUTPUT_QUESTIONTEXT = 1;
 
@@ -117,7 +105,7 @@ class quiz_essaydownload_report extends quiz_essaydownload_report_parent_alias {
             parent::init($mode, $formclass, $quiz, $cm, $course);
 
         $this->options = new quiz_essaydownload_options('essaydownload', $quiz, $cm, $course);
-        $this->options->states = [\quiz_essaydownload_quiz_attempt_alias::FINISHED];
+        $this->options->states = [\mod_quiz\quiz_attempt::FINISHED];
 
         if ($fromform = $this->form->get_data()) {
             $this->options->process_settings_from_form($fromform);

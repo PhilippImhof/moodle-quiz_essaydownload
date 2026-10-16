@@ -94,7 +94,7 @@ class quiz_essaydownload_test_helper {
     /**
      * Helper method to add a random question to quiz that will not resolve to an essay question.
      *
-     * @param component_generator_base $questiongenerator
+     * @param \component_generator_base $questiongenerator
      * @param \stdClass $quiz
      * @param int $page
      * @param array $override
@@ -216,7 +216,7 @@ class quiz_essaydownload_test_helper {
         $attempt = quiz_create_attempt($quizobj, $attemptnumber, null, $starttime, false, $user->id);
         quiz_start_new_attempt($quizobj, $quba, $attempt, $attemptnumber, $starttime);
         quiz_attempt_save_started($quizobj, $quba, $attempt);
-        $attemptobj = \mod_quiz\quiz_settings::create($attempt->id);
+        $attemptobj = \mod_quiz\quiz_attempt::create($attempt->id);
 
         advanced_testcase::setUser();
 

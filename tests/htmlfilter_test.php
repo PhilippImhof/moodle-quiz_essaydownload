@@ -47,7 +47,7 @@ final class htmlfilter_test extends \advanced_testcase {
         yield ['<p><a href="../../../../etc/passwd">Click me!</a></p>', '<p><a href="../../../../etc/passwd">Click me!</a></p>'];
         yield [
             '<p>[&lt;link&gt; tag removed]</p>',
-            '<p><link href="../../../../etc/passwd"></p>'
+            '<p><link href="../../../../etc/passwd"></p>',
         ];
         yield ['[&lt;img&gt; tag removed]', '<img src="foo.jpg">'];
         yield [

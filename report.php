@@ -198,7 +198,7 @@ class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report 
             $this->cm,
             $this->course,
             $this->quiz,
-            $this->options,
+            method_exists($this, 'setup_report_data') ? null : $this->options,
             $this->currentgroup,
             true,
             true
@@ -740,7 +740,7 @@ class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report 
             $this->cm,
             $this->course,
             $this->quiz,
-            $this->options,
+            method_exists($this, 'setup_report_data') ? null : $this->options,
             $this->currentgroup,
             true,
             true

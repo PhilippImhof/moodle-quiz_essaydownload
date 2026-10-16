@@ -69,3 +69,9 @@ Feature: Output of notifications in case of errors
     Then I should see "Attempts: 1"
     And I should see "Nothing to download"
     And "Download" "button" should not exist
+
+  Scenario: The user search combobox and filter by name widget should not exist when notifications are shown
+    Given the site is running Moodle version 5.3 or higher
+    When I am on the "Quiz 4" "quiz_essaydownload > essaydownload report" page logged in as "teacher1"
+    Then I should not see "Filter by name"
+    And ".usersearchdropdown" "css_element" should not exist

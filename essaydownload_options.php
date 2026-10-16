@@ -23,16 +23,6 @@
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-// This work-around is required until Moodle 4.2 is the lowest version we support.
-if (class_exists('\mod_quiz\local\reports\attempts_report_options')) {
-    class_alias('\mod_quiz\local\reports\attempts_report_options', '\quiz_essaydownload_options_parent_class_alias');
-} else {
-    require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_options.php');
-    class_alias('\mod_quiz_attempts_report_options', '\quiz_essaydownload_options_parent_class_alias');
-}
-
 /**
  * Class to store the options for a {@see quiz_essaydownload_report}.
  *
@@ -41,7 +31,7 @@ if (class_exists('\mod_quiz\local\reports\attempts_report_options')) {
  * @author    Philipp E. Imhof
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class quiz_essaydownload_options extends quiz_essaydownload_options_parent_class_alias {
+class quiz_essaydownload_options extends \mod_quiz\local\reports\attempts_report_options {
     /** @var bool whether to group all answers from an attempt into a single file */
     public $allinone = false;
 

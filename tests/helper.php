@@ -27,16 +27,6 @@ namespace quiz_essaydownload;
 
 use advanced_testcase;
 
-defined('MOODLE_INTERNAL') || die();
-
-// This work-around is required until Moodle 4.2 is the lowest version we support.
-if (class_exists('\mod_quiz\quiz_settings')) {
-    class_alias('\mod_quiz\quiz_settings', '\quiz_essaydownload_quiz_settings_alias');
-} else {
-    require_once($CFG->dirroot . '/mod/quiz/classes/plugininfo/quiz.php');
-    class_alias('\quiz', '\quiz_essaydownload_quiz_settings_alias');
-}
-
 /**
  * Helper class providing some useful methods for Essay responses downloader plugin unit
  * tests (quiz_essaydownload).
@@ -115,7 +105,7 @@ class quiz_essaydownload_test_helper {
         $questiongenerator->create_question('shortanswer', null, ['category' => $cat->id]);
 
         if (class_exists('\qbank_managecategories\category_condition')) {
-            $quizobj = \quiz_essaydownload_quiz_settings_alias::create($quiz->id);
+            $quizobj = \mod_quiz\quiz_settings::create($quiz->id);
             $structure = $quizobj->get_structure();
             $filtercondition = [
                 'filter' => [
@@ -146,7 +136,7 @@ class quiz_essaydownload_test_helper {
         $questiongenerator->create_question('essay', null, ['category' => $cat->id]);
 
         if (class_exists('\qbank_managecategories\category_condition')) {
-            $quizobj = \quiz_essaydownload_quiz_settings_alias::create($quiz->id);
+            $quizobj = \mod_quiz\quiz_settings::create($quiz->id);
             $structure = $quizobj->get_structure();
             $filtercondition = [
                 'filter' => [
@@ -217,7 +207,7 @@ class quiz_essaydownload_test_helper {
         advanced_testcase::setUser($user);
 
         $starttime = time();
-        $quizobj = \quiz_essaydownload_quiz_settings_alias::create($quiz->id, $user->id);
+        $quizobj = \mod_quiz\quiz_settings::create($quiz->id, $user->id);
 
         $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
         $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
@@ -226,7 +216,7 @@ class quiz_essaydownload_test_helper {
         $attempt = quiz_create_attempt($quizobj, $attemptnumber, null, $starttime, false, $user->id);
         quiz_start_new_attempt($quizobj, $quba, $attempt, $attemptnumber, $starttime);
         quiz_attempt_save_started($quizobj, $quba, $attempt);
-        $attemptobj = \quiz_essaydownload_quiz_attempt_alias::create($attempt->id);
+        $attemptobj = \mod_quiz\quiz_settings::create($attempt->id);
 
         advanced_testcase::setUser();
 

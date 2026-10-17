@@ -130,6 +130,14 @@ class quiz_essaydownload_form extends moodleform {
 
         $mform->addElement(
             'advcheckbox',
+            'anonymous',
+            get_string('anonymous', 'quiz_essaydownload'),
+            get_string('anonymousexport', 'quiz_essaydownload')
+        );
+        $mform->addHelpButton('anonymous', 'anonymousexport', 'quiz_essaydownload');
+
+        $mform->addElement(
+            'advcheckbox',
             'attachments',
             get_string('attachments', 'quiz_essaydownload'),
             get_string('includeattachments', 'quiz_essaydownload')

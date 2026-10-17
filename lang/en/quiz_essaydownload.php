@@ -25,9 +25,13 @@
 
 $string['allinone'] = 'All answers in one file per attempt';
 $string['allinone_help'] = 'If this option is enabled, all the answers will be grouped in one file per attempt.';
+$string['anonymous'] = 'Anonymisation';
+$string['anonymousexport'] = 'Create anonymised export.';
+$string['anonymousexport_help'] = 'The archive will contain a file called "anonymised_ids_and_names.csv" where you can look up the names for each anonymised ID.';
 $string['attachments'] = 'Attachments';
 $string['byattempt'] = 'Attempt';
 $string['byquestion'] = 'Question';
+$string['deanonymisationfilename'] = 'anonymised_ids_and_names.csv';
 $string['errorfilename'] = 'error-{$a}.txt';
 $string['errorfontsize'] = 'Font size should be an integer between 6 and 50.';
 $string['errorinvalidtemplate'] = 'Invalid template. The template must contain at least one placeholder and no other placeholders than the following: %firstname%, %lastname%, %userid%, %idnumber%, %username%.';

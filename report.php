@@ -282,6 +282,11 @@ class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report 
 
         $results = $DB->get_records_sql($sql, ['quizid' => $this->quiz->id] + $joins->params);
 
+        // If the user wants anonymous grading, we will need random IDs for each attempt. We
+        // generate the numbers here, even if we are not sure whether they are needed later.
+        $randomids = self::generate_random_number_array(count($results));
+        $i = 0;
+
         $attempts = [];
         $filenametemplate = $this->options->filenametemplate;
         // We add a dummy placeholder for the attempt id, because that will be the very first column
@@ -293,6 +298,8 @@ class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report 
             $attempts[$result->attemptid]['userid'] = $result->userid;
             $attempts[$result->attemptid]['idnumber'] = $result->idnumber;
             $attempts[$result->attemptid]['username'] = $result->username;
+            $attempts[$result->attemptid]['anonymous'] = $randomids[$i++];
+            $attempts[$result->attemptid]['datetime'] = date("Y-m-d;H:i:s", $result->timefinish);
 
             // If the user has requested short filenames, we limit the last and first name to 40
             // characters each.
@@ -304,11 +311,8 @@ class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report 
             $filename = str_replace($placeholders, get_object_vars($result), $filenametemplate);
 
             // Build the path for this attempt: <name>_<attemptid>_<date/time finished>.
-            $path = $filename . '_' . $result->attemptid;
-            $path = $path . '_' .  date('Ymd_His', $result->timefinish);
-            $path = self::clean_filename($path);
-
-            $attempts[$result->attemptid]['path'] = $path;
+            $path = $filename . '_' . $result->attemptid . '_' .  date('Ymd_His', $result->timefinish);
+            $attempts[$result->attemptid]['path'] = self::clean_filename($path);
         }
 
         return $attempts;
@@ -533,6 +537,11 @@ class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report 
         // Counter in case of errors.
         $errors = 0;
 
+        // If the user wants an anonymous export, we fetch the path information from 'anonymous' instead
+        // of taking it from 'path'.
+        $pathkey = ($this->options->anonymous ? 'anonymous' : 'path');
+        $deanonymisation = [];
+
         // Iterate over every attempt and every question.
         foreach ($this->attempts as $attemptid => $attemptdata) {
             $questions = $this->get_details_for_attempt($attemptid);
@@ -547,9 +556,9 @@ class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report 
 
                 // Depending on the user's choice, the files will either be grouped by attempt or by question.
                 if ($this->options->groupby === 'byattempt') {
-                    $path = $attemptdata['path'] . '/' . $questionpath;
+                    $path = $attemptdata[$pathkey] . '/' . $questionpath;
                 } else {
-                    $path = $questionpath . '/' . $attemptdata['path'];
+                    $path = $questionpath . '/' . $attemptdata[$pathkey];
                 }
                 // If the user wants all questions in one single PDF, we will use a special filename.
                 // The parts of the path name (attempt and question path) do not contain any slashes, because
@@ -557,8 +566,14 @@ class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report 
                 // "allquestions" path component.
                 $groupedpath = strstr($path, '/', true) . '_allquestions_';
 
-                // Format fullname according to user's template.
+                // Format fullname according to user's template. If anonymisation is requested, override the
+                // name by the ID and store the data in our deanonymisation index file.
                 $fullname = $this->build_fullname($attemptdata);
+                if ($this->options->anonymous) {
+                    $id = $attemptdata['anonymous'];
+                    $deanonymisation[$id] = $fullname . ";" . $attemptdata['datetime'];
+                    $fullname = $id;
+                }
 
                 try {
                     // If the user wants a flat archive structure, we will store stuff as attempt_1/question_1_response.pdf
@@ -652,6 +667,15 @@ class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report 
             $this->notification(get_string('nothingtodownload', 'quiz_essaydownload'));
             $this->log(false);
         } else {
+            // If there is deanonisation information available, we add it to the ZIP at the root level.
+            if (!empty($deanonymisation)) {
+                ksort($deanonymisation);
+                $overview = "sep=;\n";
+                foreach ($deanonymisation as $id => $name) {
+                    $overview .= "$id;$name\n";
+                }
+                $zipwriter->add_file_from_string(get_string('deanonymisationfilename', 'quiz_essaydownload'), $overview);
+            }
             $zipwriter->finish();
             $this->log(true);
             exit();
@@ -899,6 +923,22 @@ class quiz_essaydownload_report extends \mod_quiz\local\reports\attempts_report 
         $doc->SetAutoPageBreak(true, $this->options->marginbottom + $additionalfootermargin);
 
         return $doc;
+    }
+
+    /**
+     * Generate a shuffled array of consecutive integers where all numbers have the same no. of digits.
+     *
+     * @param int $count
+     * @return array
+     */
+    public static function generate_random_number_array(int $count): array {
+        // We want $count consecutive integers, each with the same number of digits.
+        // That means we must have $count ≤ 9 * 10^d, e. g. for 90 we can do 10..99, but
+        // for 93 we would need to do 100..192 and not 10..102.
+        $start = 10 ** ceil(log10($count / 9));
+        $range = range($start, $start + $count - 1);
+        shuffle($range);
+        return $range;
     }
 
     /**

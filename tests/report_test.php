@@ -1897,4 +1897,36 @@ final class report_test extends \advanced_testcase {
             $reflectedmethod->invoke($report, $invalidfirst . $invalidfirst),
         );
     }
+
+    /**
+     * Data provider. The minimum and maximum number generated for a given count.
+     *
+     * @return Generator
+     */
+    public static function provide_counts(): Generator {
+        yield [[1, 5], 5];
+        yield [[1, 9], 9];
+        yield [[10, 19], 10];
+        yield [[10, 99], 90];
+        yield [[100, 190], 91];
+        yield [[100, 199], 100];
+        yield [[100, 312], 213];
+    }
+
+    /**
+     * Test generation of the random number array, all numbers must have the
+     * same number of digits.
+     *
+     * @dataProvider provide_counts
+     *
+     * @param array $expected minimum and maximum values in the array
+     * @param int $count number of elements
+     * @return void
+     */
+    public function test_generate_random_number_array(array $expected, int $count): void {
+        $ar = quiz_essaydownload_report::generate_random_number_array($count);
+
+        self::assertEquals($expected[0], min($ar));
+        self::assertEquals($expected[1], max($ar));
+    }
 }

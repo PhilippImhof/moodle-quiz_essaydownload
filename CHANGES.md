@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.8.0 (2026-10-17)
+
+- new feature: allow anonymised export of responses
+- improvement: only show action bar (Moodle 5.3+) elements that can be used with our report
+- internal: remove legacy compatibility code needed for Moodle 4.1 and earlier
+
 ### 1.7.0 (2026-10-10)
 
 - improvement: add logging of successful and failed exports
